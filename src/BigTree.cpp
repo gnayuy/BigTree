@@ -782,18 +782,16 @@ int BigTree::reformat()
                                         }
                                     }
 
-                                    //
+                                    // check all-zeros array
                                     int numNonZeros = 0;
-                                    int saveVoxelThresh = 1;
 
-                                    #pragma omp parallel for reduction(+:numNonZeros)
+                                    #pragma omp parallel for
                                     for(int i=0; i<szChunk; i++)
                                     {
-                                        if(p[i]>0)
-                                            numNonZeros++;
+                                        numNonZeros |= p[i];
                                     }
 
-                                    if(numNonZeros>saveVoxelThresh)
+                                    if(numNonZeros != 0)
                                     {
                                         int temp_n_chans = color;
                                         if(temp_n_chans==2)

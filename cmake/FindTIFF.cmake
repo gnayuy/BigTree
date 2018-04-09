@@ -20,8 +20,8 @@ FIND_PATH(TIFF_INCLUDE_DIR
     PATHS ${TIFF_SEARCHPATH}
     DOC "The TIFF include directory")
 
-FIND_LIBRARY(TIFF_LIBRARIES
-    NAMES tiff tiffxx
+FIND_LIBRARY(TIFF_LIBRARY
+    NAMES tiff
     PATHS
     /usr/lib
     /usr/local/lib
@@ -32,6 +32,22 @@ FIND_LIBRARY(TIFF_LIBRARIES
     /opt/lib64
     /opt/local/lib64
     DOC "The TIFF libraries")
+
+FIND_LIBRARY(TIFFXX_LIBRARY
+    NAMES tiffxx
+    PATHS
+    /usr/lib
+    /usr/local/lib
+    /usr/lib64
+    /usr/local/lib64
+    /opt/lib
+    /opt/local/lib
+    /opt/lib64
+    /opt/local/lib64
+    DOC "The TIFFXX libraries")
+
+
+SET(TIFF_LIBRARIES ${TIFF_LIBRARY} ${TIFFXX_LIBRARY})
 
 IF(TIFF_INCLUDE_DIR AND TIFF_LIBRARIES)
     SET(TIFF_FOUND TRUE)

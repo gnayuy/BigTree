@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "cudalzwdecompkernel.cuh"
-#include "Image.h"
+#include "culzw.h"
 
 void gpu_init()
 {

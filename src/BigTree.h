@@ -1,6 +1,5 @@
 // BigTree.h
 
-
 #include "Image.h"
 
 #define MAX_IMAGES_STREAM 32

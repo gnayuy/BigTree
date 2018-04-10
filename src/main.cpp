@@ -3,7 +3,7 @@
 // gnayuy, 3/30/2018
 //
 //
-// Here is simple implementation to demonstrate the idea of "BigTree: An Efficient Tool for Reformatting Large-scale Brain Images"
+// Here is simple implementation to demonstrate the idea of "BigTree: high-performance hierarchical tree construction for large image data sets"
 //
 
 

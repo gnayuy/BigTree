@@ -17,7 +17,7 @@ SET( BigTree_sources
 # source files
     ${PROJECT_SOURCE_DIR}/src/Image.cpp
     ${PROJECT_SOURCE_DIR}/src/BigTree.cpp
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
+    ${PROJECT_SOURCE_DIR}/src/main.cu
     ${PROJECT_SOURCE_DIR}/3rdparty/culzwdecomp.cu
 )
 
@@ -30,7 +30,7 @@ ENDIF(TIFF_FOUND)
 
 # CUDA
 FIND_PACKAGE(CUDA QUIET REQUIRED)
-SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -O3 -gencode arch=compute_50,code=sm_50)
+SET(CMAKE_CUDA_FLAGS "-O3 -gencode arch=compute_62,code=sm_62")
 
 # system settings
 #set_target_properties( BigTree PROPERTIES CUDA_SEPARABLE_COMPILATION ON)

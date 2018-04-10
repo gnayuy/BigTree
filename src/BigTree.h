@@ -89,6 +89,7 @@ public:
     uint32 block_width, block_height, block_depth;
     uint16 datatype;
     uint32 color;
+    uint32 rowsPerStrip, stripByteCounts, stripOffsets;
     int *halve_pow2;
     long z_ratio, z_max_res;
     uint8 *ubuffer;

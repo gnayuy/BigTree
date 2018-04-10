@@ -79,7 +79,7 @@ void swap2bytes(void *targetp);
 void swap4bytes(void *targetp);
 
 //
-char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, uint32  &sz3, uint16 &datatype);
+char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, uint32  &sz3, uint16 &datatype, uint32 &rowsPerStrip, uint32 &stripOffsets, uint32 &stripByteCounts);
 
 //
 void readTiff(stringstream *dataStreamInMemory, unsigned char *&img, unsigned int img_width, unsigned int img_height, unsigned int first, unsigned int last, int starti = -1, int endi = -1, int startj = -1, int endj = -1);
@@ -92,6 +92,9 @@ int openTiff3DFile(char *filename, char *mode, void *&fhandle, bool reopen);
 
 //
 char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsigned int  img_width, unsigned int  img_height, int spp, int bpp, int NPages);
+
+//
+int readBinary(char *file_name, unsigned char *&p, unsigned int &size);
 
 //
 int tiffIOTest(char* inputFileName, char *outputFileName, int compressionMethod);

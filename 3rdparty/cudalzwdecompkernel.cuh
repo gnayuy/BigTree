@@ -98,45 +98,6 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
 }
 
 //*********************************************************
-//	GPU_PREDICTOR for color(PlanarConfiguration=1)
-//*********************************************************
-__global__ void GPU_TIFFPredictor_color(unsigned char *DECODE,unsigned int WIDTH,unsigned int LENGTH,int LANEBLOCKNUM)
-{
-    int laneId = threadIdx.x & 0x1f;
-    int laneblockId=threadIdx.x>>5;
-    int x=(2*blockIdx.x+laneblockId)*WIDTH*3+laneId*3;
-    //int limit =(2*blockIdx.x+laneblockId+1)*WIDTH;
-    int limit = (WIDTH+31)>>5;
-    unsigned int temp;
-    unsigned int carry=0;
-    unsigned int value ;
-    //while(x < limit){
-    //if(2*blockIdx.x+laneblockId!=0)return;
-    if(LANEBLOCKNUM<=2*blockIdx.x+laneblockId) { return;}
-    for(int w=0;w<limit;w++){
-        if((w<<5)+laneId<WIDTH){
-            value = (DECODE[x]<<18)|(DECODE[x+1]<<9)|(DECODE[x+2]);
-        }
-        for (int i=1; i<=16; i=i<<1) {
-            temp = __shfl_up(value, i, 32);
-            if (laneId >= i)
-                value = (value + temp) & 0x3FDFEFF;
-        }
-        temp=(carry+value) & 0x3FDFEFF;
-        if((w<<5)+laneId<WIDTH){
-            DECODE[x]=(temp>>18);
-            DECODE[x+1]=((temp>>9)&0xFF);
-            DECODE[x+2]=(temp&0xFF);
-            //if(laneId<=1) printf("%d:%d %d %d\n",x,DECODE[x],DECODE[x+1],DECODE[x+2]);
-        }
-        x=x+96;
-        carry += __shfl(value, 31, 32);
-        carry= (carry) & 0x3FDFEFF;
-        //__syncthreads();
-    }
-}
-
-//*********************************************************
 //	GPU_LZW_DEC
 //*********************************************************
 __global__ void GPU_TiffLZWDecompression(

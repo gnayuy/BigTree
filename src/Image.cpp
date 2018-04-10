@@ -231,7 +231,7 @@ void swap4bytes(void *targetp)
 }
 
 //
-char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, uint32  &sz3, uint16 &datatype)
+char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, uint32  &sz3, uint16 &datatype, uint32 &rowsPerStrip, uint32 &stripOffsets, uint32 &stripByteCounts)
 {
     //
     TIFFSetWarningHandler(0);
@@ -265,6 +265,24 @@ char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, 
     if (!TIFFGetField(input, TIFFTAG_SAMPLESPERPIXEL, &sz3))
     {
         sz3 = 1;
+    }
+
+    if (!TIFFGetField(input, TIFFTAG_ROWSPERSTRIP, &rowsPerStrip))
+    {
+        TIFFClose(input);
+        return ((char *) "Undefined ROWSPERSTRIP.");
+    }
+
+    if (!TIFFGetField(input, TIFFTAG_STRIPOFFSETS, &stripOffsets))
+    {
+        TIFFClose(input);
+        return ((char *) "Undefined STRIPOFFSETS.");
+    }
+
+    if (!TIFFGetField(input, TIFFTAG_STRIPBYTECOUNTS, &stripByteCounts))
+    {
+        TIFFClose(input);
+        return ((char *) "Undefined STRIPBYTECOUNTS.");
     }
 
     uint16 Cpage;
@@ -850,6 +868,40 @@ char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsi
 
     //
     return (char *) 0;
+}
+
+//
+int readBinary(char *file_name, unsigned char *&p, unsigned int &size)
+{
+    FILE *fp;
+
+    if((fp = fopen(file_name , "rb" ))==NULL)
+    {
+        printf("fopen FAILURE\n");
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    try
+    {
+        p = (unsigned char *)malloc(sizeof(unsigned char)*size);
+    }
+    catch(...)
+    {
+        cout<<"failed to alloc memory\n";
+        return -1;
+    }
+
+    if(p == NULL){
+        printf("malloc FAILURE\n");
+        return -1;
+    }
+    fread(p,sizeof(unsigned char),size,fp);
+    fclose(fp);
+
+    //
+    return 0;
 }
 
 //

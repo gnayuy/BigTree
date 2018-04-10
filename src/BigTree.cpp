@@ -192,7 +192,7 @@ int BigTree::init()
 
     //
     string firstfilepath = *input2DTIFFs.begin();
-    loadTiffMetaInfo(const_cast<char*>(firstfilepath.c_str()), width, height, depth, color, datatype);
+    loadTiffMetaInfo(const_cast<char*>(firstfilepath.c_str()), width, height, depth, color, datatype, rowsPerStrip, stripOffsets, stripByteCounts);
     depth = input2DTIFFs.size();
 
     cout<<"Image Size "<<width<<"x"<<height<<"x"<<depth<<"x"<<color<<" with "<<datatype<<endl;
@@ -388,62 +388,86 @@ uint8 *BigTree::load(long zs, long ze)
         return NULL;
     }
 
-    // fstream TIFFs from disk to memory
-    vector<stringstream*> dataInMemory;
-    vector<uint8*> imgList;
-
-    //
-    int k;
-    for(k=0; k<sbv_D; k++)
-    {
-        //building image path
-        string slicepath = *next(input2DTIFFs.begin(), zs + k);
-
-        cout<<"load ... "<<slicepath<<endl;
-
-        //
-        ifstream inFile;
-        inFile.open(slicepath.c_str());
-        if (!inFile) {
-            cerr << "Unable to open file "<<slicepath<<endl;
-            return NULL;
-        }
-
-        //
-        dataInMemory.push_back(new stringstream);
-        *dataInMemory[k] << inFile.rdbuf();
-
-        //
-        inFile.close();
-
-        //
-        uint8 *slice = subvol + (k*sbv_V*sbv_H*datatype);
-        imgList.push_back(slice);
-    }
-
-    // multithreaded read TIFFs from memory
-
     if(useGPU)
     {
+        //
         gpu_init();
-    }
 
-    omp_set_num_threads(omp_get_max_threads());
-    #pragma omp parallel
-    {
-        #pragma omp for
+        // read compressed TIFF files into memory
+        vector<unsigned char*> dataInMemory;
+        vector<uint8*> imgList;
+
+        //
+        int k;
         for(k=0; k<sbv_D; k++)
         {
-            if(useGPU)
+            //building image path
+            string slicepath = *next(input2DTIFFs.begin(), zs + k);
+
+            cout<<"load ... "<<slicepath<<endl;
+
+            unsigned int compressedSize;
+            unsigned char *p = NULL;
+            if(readBinary(const_cast<char *>(slicepath.c_str()), p, compressedSize))
             {
-                imgList[k] = cudaLZWdecompToHost(dataInMemory[k]->str().c_str(), sbv_H, sbv_V, color, datatype);
+                cout<<"fail in reading compressed TIFF files\n";
+                exit(1);
             }
-            else
+            dataInMemory.push_back(p);
+
+            //
+            uint8 *slice = subvol + (k*sbv_V*sbv_H*datatype);
+            imgList.push_back(slice);
+
+            //
+            cudaLZWdecompToHost(p, compressedSize, imgList[k], sbv_H, sbv_V, color, datatype, rowsPerStrip, stripOffsets, stripByteCounts);
+        }
+    }
+    else
+    {
+        // fstream TIFFs from disk to memory
+        vector<stringstream*> dataInMemory;
+        vector<uint8*> imgList;
+
+        //
+        int k;
+        for(k=0; k<sbv_D; k++)
+        {
+            //building image path
+            string slicepath = *next(input2DTIFFs.begin(), zs + k);
+
+            cout<<"load ... "<<slicepath<<endl;
+
+            //
+            ifstream inFile;
+            inFile.open(slicepath.c_str());
+            if (!inFile) {
+                cerr << "Unable to open file "<<slicepath<<endl;
+                return NULL;
+            }
+
+            //
+            dataInMemory.push_back(new stringstream);
+            *dataInMemory[k] << inFile.rdbuf();
+
+            //
+            inFile.close();
+
+            //
+            uint8 *slice = subvol + (k*sbv_V*sbv_H*datatype);
+            imgList.push_back(slice);
+        }
+
+        // multithreaded read TIFFs from memory
+        omp_set_num_threads(omp_get_max_threads());
+        #pragma omp parallel
+        {
+            #pragma omp for
+            for(k=0; k<sbv_D; k++)
             {
                 unsigned int sx, sy;
                 readTiff(dataInMemory[k],imgList[k],sx,sy,0,0,0,sbv_V-1,0,sbv_H-1);
             }
-
         }
     }
 
@@ -880,75 +904,6 @@ int BigTree::index()
         //
         LAYER layer = meta.layers[res_i];
 
-
-//        //
-//        ofstream outfile(filename.c_str(), ios::out | ios::app | ios::binary);
-
-//        if(outfile.is_open())
-//        {
-//            outfile << meta.mdata_version;
-//            outfile << meta.reference_V;
-//            outfile << meta.reference_H;
-//            outfile << meta.reference_D;
-
-//            outfile << layer.vs_x;
-//            outfile << layer.vs_y;
-//            outfile << layer.vs_z;
-//            outfile << layer.vs_x;
-//            outfile << layer.vs_y;
-//            outfile << layer.vs_z;
-
-//            outfile << meta.org_V;
-//            outfile << meta.org_H;
-//            outfile << meta.org_D;
-
-//            outfile << layer.dim_V;
-//            outfile << layer.dim_H;
-//            outfile << layer.dim_D;
-
-//            outfile << layer.rows;
-//            outfile << layer.cols;
-
-//            int n = layer.blocks.size(); // rows * cols
-
-//            cout<<"test "<<n<<" = "<<layer.rows*layer.cols<<endl;
-
-//            for(int i=0; i<n; i++)
-//            {
-//                BLOCK block = layer.blocks[i];
-//                uint32 N_BLOCKS = block.nBlocksPerDir;
-
-//                outfile << block.height;
-//                outfile << block.width;
-//                outfile << block.depth;
-
-//                outfile << N_BLOCKS;
-
-//                outfile << block.color;
-//                outfile << block.offset_V;
-//                outfile << block.offset_H;
-//                outfile << block.lengthDirName;
-//                outfile << block.dirName;
-
-//                for(int j=0; j<N_BLOCKS; j++)
-//                {
-//                    outfile << block.lengthFileName;
-//                    outfile << block.fileNames[j];
-//                    outfile << block.depth;
-//                    outfile << block.offsets_D[j];
-//                }
-//                outfile << block.bytesPerVoxel;
-//            }
-
-//            //
-//            outfile.close();
-//        }
-//        else
-//        {
-//            cout<<"fail in write file "<<filename<<endl;
-//            return -1;
-//        }
-
         // save
         FILE *file;
 
@@ -997,21 +952,26 @@ int BigTree::index()
 
             for(int j=0; j<N_BLOCKS; j++)
             {
-                if(block.nonZeroBlocks[j]==false)
-                {
-                    if( remove( block.fileNames[j].c_str() ) != 0 )
-                    {
-                        cout<<"Error deleting file \n";
-                        return -1;
-                    }
-                }
-                else
-                {
-                    fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
-                    fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
-                    fwrite(&(block.depth), sizeof(uint32), 1, file);
-                    fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
-                }
+//                if(block.nonZeroBlocks[j]==false)
+//                {
+//                    if( remove( block.fileNames[j].c_str() ) != 0 )
+//                    {
+//                        cout<<"Error deleting file \n";
+//                        return -1;
+//                    }
+//                }
+//                else
+//                {
+//                    fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
+//                    fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
+//                    fwrite(&(block.depth), sizeof(uint32), 1, file);
+//                    fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
+//                }
+
+                fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
+                fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
+                fwrite(&(block.depth), sizeof(uint32), 1, file);
+                fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
             }
             fwrite(&(block.bytesPerVoxel), sizeof(uint32), 1, file);
         }

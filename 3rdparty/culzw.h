@@ -3,6 +3,7 @@
 
 //
 void gpu_init();
-unsigned char *cudaLZWdecompToHost(const char *filestr, int width,int length,int samplesPerPixel,int bytesPerPixel);
+int cudaLZWdecompToHost(unsigned char *compressedImage, int compressedSize, unsigned char *&p, unsigned int width, unsigned int length,
+                        unsigned int samplesPerPixel, unsigned int bytesPerPixel, unsigned int rowsPerStrip, unsigned int stripOffsets, unsigned int stripByteCounts);
 
 #endif // __CULZW_H

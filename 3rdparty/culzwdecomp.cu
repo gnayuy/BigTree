@@ -19,70 +19,54 @@ void gpu_init()
     cudaFree(g_tmp);
 }
 
-unsigned char *cudaLZWdecompToHost(const char *filestr, int width,int length,int samplesPerPixel,int bytesPerPixel)
+int cudaLZWdecompToHost(unsigned char *compressedImage, int compressedSize, unsigned char *&p, unsigned int width, unsigned int length,
+                        unsigned int samplesPerPixel, unsigned int bytesPerPixel, unsigned int rowsPerStrip, unsigned int stripOffsets, unsigned int stripByteCounts)
 {
-    unsigned int filesize;
-    unsigned char *TiffFile = ReadBinary(filename,&filesize);//+++ Read Tiff File
-    TAG tag;
-    ReadTiffTag(TiffFile,filesize,&tag); //+++ Set file-information
-    //PrintTiffTag(TiffFile,&tag,0);
-    if(tag.Compression!=5){
-        fprintf(stderr,"Error : NOT LZW comopressed file\n");
-        exit(1);
-    }
+    //
+    int imageSize = width*length*samplesPerPixel*bytesPerPixel;
 
-
-    int OriSize = width*length*samplesPerPixel*bytesPerPixel;
-
-
+    //
     int StripSize;
-    if(samplesPerPixel==1){
-        StripSize=tag.ImageWidth*tag.RowsPerStrip;
-    }else if(tag.SamplesPerPixel==3){
-        StripSize=tag.ImageWidth*tag.RowsPerStrip*3*(tag.PlanarConfiguration==1);
+    if(samplesPerPixel==1)
+    {
+        StripSize=width*rowsPerStrip;
     }
-	unsigned char *g_TiffFile; //+++ Input Tiff File
-	unsigned char *g_ImageData;//+++ Decompressed Data
-	cudaMalloc((void**)&g_TiffFile  ,sizeof(unsigned char)*filesize);
-    cudaMalloc((void**)&g_ImageData ,sizeof(unsigned char)*OriSize);
-    cudaMemcpy(g_TiffFile,TiffFile,sizeof(unsigned char)*tag.FileSize,cudaMemcpyHostToDevice);
-
-	GPU_TiffLZWDecompression<<<tag.StripNumber,DIMLEN>>>(
-											g_TiffFile,
-											g_ImageData,
-											StripSize,
-											tag.StripOffsets_Offset,
-											tag.StripByteCounts_Offset,
-											tag.ByteOder);
-    //+++ GPU LZW Decompression
-    if(tag.Predictor==2){
-        if(tag.SamplesPerPixel==1){
-            int blocknum=(tag.ImageLength+5)/6;
-            int laneblocknum=(tag.ImageLength+2)/3;
-            GPU_TIFFPredictor_gray<<<blocknum,64>>>(g_ImageData,tag.ImageWidth,tag.ImageLength,laneblocknum);
-        }else if(tag.SamplesPerPixel==3){
-            if(tag.PlanarConfiguration==1){
-                int blocknum=(tag.ImageLength+1)/2;
-                int laneblocknum=tag.ImageLength;
-                GPU_TIFFPredictor_color<<<blocknum,64>>>(g_ImageData,tag.ImageWidth,tag.ImageLength,laneblocknum);
-            }else{
-                int blocknum=(tag.ImageLength*3+1)/2;
-                int laneblocknum=tag.ImageLength;
-                GPU_TIFFPredictor_gray<<<blocknum,64>>>(g_ImageData,tag.ImageWidth,tag.ImageLength,laneblocknum);
-            }
-        }
+    else
+    {
+        // to do
     }
 
-    unsigned char *ImageData=(unsigned char *)malloc(sizeof(unsigned char)*OriSize);
-    cudaMemcpy(ImageData,g_ImageData,sizeof(unsigned char)*OriSize,cudaMemcpyDeviceToHost);
+    unsigned int stripNumber = *((unsigned int *)(compressedImage+4));
+
+    // host -> device
+    unsigned char *g_TiffFile; // Input Tiff File
+    unsigned char *g_ImageData;// Decompressed Data
+    cudaMalloc((void**)&g_TiffFile  ,sizeof(unsigned char)*compressedSize);
+    cudaMalloc((void**)&g_ImageData ,sizeof(unsigned char)*imageSize);
+    cudaMemcpy(g_TiffFile,compressedImage,sizeof(unsigned char)*compressedSize,cudaMemcpyHostToDevice);
+
+    GPU_TiffLZWDecompression<<<stripNumber,DIMLEN>>>(g_TiffFile, g_ImageData, StripSize, stripOffsets, stripByteCounts, compressedImage[0]);
+
+    // GPU LZW Decompression
+    if(samplesPerPixel==1)
+    {
+        int blocknum=(length+5)/6;
+        int laneblocknum=(width+2)/3;
+        GPU_TIFFPredictor_gray<<<blocknum,64>>>(g_ImageData, width, length, laneblocknum);
+    }
+    else
+    {
+        // to do
+    }
+
+    // device -> host
+    cudaMemcpy(p,g_ImageData,sizeof(unsigned char)*imageSize,cudaMemcpyDeviceToHost);
+
     //cudaThreadSynchronize();
     cudaFree(g_TiffFile);
-    free(TiffFile);
-    *Width=tag.ImageWidth;
-    *Length=tag.ImageLength;
-    *SamplesPerPixel=tag.SamplesPerPixel;
-    *PlanarConfiguration=tag.PlanarConfiguration;
-    //printf("%s\n",cudaGetErrorString(cudaGetLastError()));
-    return ImageData;
+    free(compressedImage);
+
+    //
+    return 0;
 }
 #endif

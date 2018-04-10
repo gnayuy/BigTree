@@ -68,7 +68,7 @@ TMITREE::~TMITREE()
 }
 
 //
-BigTree::BigTree(string inputdir, string outputdir, int scales)
+BigTree::BigTree(string inputdir, string outputdir, int scales, bool usingGPU)
 {
     // default parameters settings
     block_width = 256;
@@ -76,6 +76,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales)
     block_depth = 256;
 
     nbits = 4;
+
+    useGPU = usingGPU;
 
     // inputs
     resolutions = scales;
@@ -419,14 +421,28 @@ uint8 *BigTree::load(long zs, long ze)
     }
 
     // multithreaded read TIFFs from memory
+
+    if(useGPU)
+    {
+        gpu_init();
+    }
+
     omp_set_num_threads(omp_get_max_threads());
     #pragma omp parallel
     {
         #pragma omp for
         for(k=0; k<sbv_D; k++)
         {
-            unsigned int sx, sy;
-            readTiff(dataInMemory[k],imgList[k],sx,sy,0,0,0,sbv_V-1,0,sbv_H-1);
+            if(useGPU)
+            {
+                imgList[k] = cudaLZWdecompToHost(dataInMemory[k]->str().c_str(), sbv_H, sbv_V, color, datatype);
+            }
+            else
+            {
+                unsigned int sx, sy;
+                readTiff(dataInMemory[k],imgList[k],sx,sy,0,0,0,sbv_V-1,0,sbv_H-1);
+            }
+
         }
     }
 

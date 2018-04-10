@@ -4,6 +4,7 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 #
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/3rdparty)
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src)
 
 # sources
 SET( BigTree_sources
@@ -11,11 +12,13 @@ SET( BigTree_sources
 # header files
     ${PROJECT_SOURCE_DIR}/src/Image.h
     ${PROJECT_SOURCE_DIR}/src/BigTree.h
+    ${PROJECT_SOURCE_DIR}/3rdparty/cudalzwdecompkernel.cuh
 
 # source files
     ${PROJECT_SOURCE_DIR}/src/Image.cpp
     ${PROJECT_SOURCE_DIR}/src/BigTree.cpp
     ${PROJECT_SOURCE_DIR}/src/main.cpp
+    ${PROJECT_SOURCE_DIR}/3rdparty/culzwdecomp.cu
 )
 
 # TIFF
@@ -25,15 +28,23 @@ SET(CMAKE_REQUIRED_LIBRARIES ${TIFF_LIBRARIES})
 INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIR})
 ENDIF(TIFF_FOUND)
 
+# CUDA
+FIND_PACKAGE(CUDA QUIET REQUIRED)
+SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -O3 -gencode arch=compute_50,code=sm_50)
+
 # system settings
+#set_target_properties( BigTree PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
 IF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -lm -fopenmp -pthread" CACHE STRING "CXX Compiler Flags" FORCE)
 ADD_DEFINITIONS(-DUse_OpenMP)
+#set_property(TARGET BigTree PROPERTY CUDA_SEPARABLE_COMPILATION ON)
 ENDIF()
 
 IF(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 -fopenmp" CACHE STRING "CXX Compiler Flags" FORCE)
 SET(CMAKE_MACOSX_RPATH 1)
+#set_property(TARGET BigTree PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
 ENDIF()
 
 #

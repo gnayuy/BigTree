@@ -94,3 +94,9 @@ char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsi
 
 //
 int tiffIOTest(char* inputFileName, char *outputFileName, int compressionMethod);
+
+//
+void gpu_init();
+
+//
+unsigned char *cudaLZWdecompToHost(const char *filestr, int width,int length,int samplesPerPixel,int bytesPerPixel);

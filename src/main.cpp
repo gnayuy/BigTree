@@ -27,6 +27,7 @@ int main (int argc, const char *argv[])
     //
     int nScale = 3;
     string inputDir, outputDir;
+    bool usingGPU = true;
 
     //
     try
@@ -74,7 +75,7 @@ int main (int argc, const char *argv[])
     }
 
     // BigTree
-    BigTree biconvert(inputDir, outputDir, nScale);
+    BigTree bt(inputDir, outputDir, nScale, usingGPU);
 
     //
     return 0;

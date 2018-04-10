@@ -1,6 +1,6 @@
 # BigTree developed by gnayuy, March 30, 2018
 
-PROJECT(BigTree)
+PROJECT(BigTree LANGUAGES CXX CUDA)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 

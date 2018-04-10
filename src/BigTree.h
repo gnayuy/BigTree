@@ -67,7 +67,7 @@ public:
 class BigTree
 {
 public:
-    BigTree(string inputdir, string outputdir, int scales);
+    BigTree(string inputdir, string outputdir, int scales, bool usingGPU=true);
     ~BigTree();
 
 public:
@@ -94,6 +94,7 @@ public:
     long z_ratio, z_max_res;
     uint8 *ubuffer;
     int nbits;
+    bool useGPU;
 
     TMITREE meta;
 };

@@ -40,17 +40,19 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
     int laneId = threadIdx.x & 0x1f;
     int laneblockId=threadIdx.x>>5;
     int x=(2*blockIdx.x+laneblockId)*WIDTH*3+laneId;
-    //int limit =(2*blockIdx.x+laneblockId+1)*WIDTH;
-    int limit = (WIDTH+31)/32;
+
+    //
+    int limit = (WIDTH+31)>>5;
     unsigned int temp;
     unsigned int carry=0;
     unsigned int value ;
-    //while(x < limit){
+
+    //
     if(LANEBLOCKNUM<=2*blockIdx.x+laneblockId) { return;}
     int lenmod3;
     if((LANEBLOCKNUM-1!=2*blockIdx.x+laneblockId) || ((lenmod3=LENGTH%3)==0)){
         for(int w=0;w<limit;w++){
-            if(w*32+laneId<WIDTH)
+            if(w<<5+laneId<WIDTH)
                 value = (DECODE[x]<<18)|(DECODE[x+WIDTH]<<9)|(DECODE[x+(WIDTH<<1)]);
 
             for (int i=1; i<=16; i=i<<1) {
@@ -59,7 +61,7 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
                     value = (value + temp) & 0x3FDFEFF;
             }
             temp=(carry+value) & 0x3FDFEFF;
-            if(w*32+laneId<WIDTH){
+            if(w<<5+laneId<WIDTH){
                 DECODE[x]=(temp>>18);
                 DECODE[x+WIDTH]=((temp>>9)&0xFF);
                 DECODE[x+(WIDTH<<1)]=(temp&0xFF);
@@ -69,9 +71,11 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
             carry= (carry) & 0x3FDFEFF;
             //__syncthreads();
         }
-    }else{
+    }
+    else
+    {
         for(int w=0;w<limit;w++){
-            if(w*32+laneId<WIDTH){
+            if(w<<5+laneId<WIDTH){
                 value = DECODE[x];
                 for(int k=1;k<lenmod3;k++){
                     value = (value<<9)|DECODE[x+WIDTH*k];
@@ -83,7 +87,7 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
                     value = (value + temp) & 0x3FDFEFF;
             }
             temp=(carry+value) & 0x3FDFEFF;
-            if(w*32+laneId<WIDTH){
+            if(w<<5+laneId<WIDTH){
                 for(int k=lenmod3-1;k>=0;k--){
                     DECODE[x+WIDTH*k]=(temp)&0xFF;
                     temp=temp>>9;
@@ -100,22 +104,14 @@ __global__ void GPU_TIFFPredictor_gray(unsigned char *DECODE,unsigned int WIDTH,
 //*********************************************************
 //	GPU_LZW_DEC
 //*********************************************************
-__global__ void GPU_TiffLZWDecompression(
-        unsigned char *CODE,
-        unsigned char *DECODE,
-        unsigned int STRIPSIZE,
-        unsigned int StripOffsets_Offset,
-        unsigned int StripByteCounts_Offset,
-        unsigned int ByteOder)
-
+__global__ void GPU_TiffLZWDecompression(unsigned char *CODE, unsigned char *DECODE, unsigned int STRIPSIZE, unsigned int StripOffsets_Offset, unsigned int StripByteCounts_Offset, unsigned int ByteOder)
 {
-
+    //
     __shared__ unsigned int s_Preoffset[1024];     // used for Prefix-sum
     __shared__ short s_PCtabP[INTERVALSIZE];       // Pointer of Pointer-Character Table
     __shared__ short s_PCtabC[INTERVALSIZE];       // Character of Pointer-Character Table
     __shared__ short s_StrLength[4096];            // length of string in entry
     __shared__ short s_FirstChar[4096];            // first character of string in entry
-
 
     __shared__ int s_CCbefore4096flag;
     __shared__ unsigned int s_MaxBitOffset;        // max-bit-offset of strip
@@ -123,7 +119,6 @@ __global__ void GPU_TiffLZWDecompression(
 
     int currPointer;
     int prevPointer;
-
 
     unsigned int codeBitOffset;
     unsigned int codeByteOffset;
@@ -175,14 +170,15 @@ __global__ void GPU_TiffLZWDecompression(
                     CODE[StripByteCounts_Offset  ];
         }
         s_CCIndex = 9+9+PACKBIT*temp;  // stripoffset
-        s_MaxBitOffset=(s_MaxBitOffset+temp-1)<<3;    // max-bit-offset of strip
+        s_MaxBitOffset=(s_MaxBitOffset+temp-1)<<3; // max-bit-offset of strip
     }
     __syncthreads();
-    offsetSegment = s_CCIndex;               //Broadcasting first index of own strip
+    offsetSegment = s_CCIndex; //Broadcasting first index of own strip
     outputOffset = blockIdx.x*STRIPSIZE;
-    //DECODE[0]=s_MaxBitOffset+outputOffset;
-    while(1){
 
+    //
+    while(1)
+    {
         __syncthreads();
         if(threadIdx.x == 0 && offsetSegment-9<=s_MaxBitOffset){//threadaIdx.x
             codeByteOffset=(offsetSegment-9)>>3;
@@ -218,7 +214,7 @@ __global__ void GPU_TiffLZWDecompression(
                     codeByteOffset= codeBitOffset>>3;
                     s_PCtabC[codeIndex+1]=mask[codeDigit-9]&(  (  (CODE[codeByteOffset  ]<<(PACKBIT<<1))|
                                                                   (CODE[codeByteOffset+1]<< PACKBIT    )|
-                                                               (CODE[codeByteOffset+2]              )  )>>(PACKBIT*3-( codeBitOffset&0x7)-codeDigit));
+                                                                  (CODE[codeByteOffset+2]              )  )>>(PACKBIT*3-( codeBitOffset&0x7)-codeDigit));
                     s_FirstChar[258+codeIndex+1]=s_PCtabC[codeIndex+1];
                     if(s_PCtabC[codeIndex+1]==256){
                         s_CCbefore4096flag=1;
@@ -276,6 +272,7 @@ __global__ void GPU_TiffLZWDecompression(
             s_FirstChar[codeIndex+258]=s_FirstChar[bufFirstChar];
             borderTraverse=borderTraverse+blockDim.x;
             __syncthreads();
+
             // ************************************************
             // prefix sum
             // ************************************************
@@ -285,16 +282,7 @@ __global__ void GPU_TiffLZWDecompression(
             }
             s_PCtabP[codeIndex] = prevPointer - 258;
 
-            /*s_Preoffset[threadIdx.x] = codeStrLength ;
-            temp = codeStrLength;
-            __syncthreads();
-            for(int i=1;i<DIMLEN;i=i<<1){
-                if(i<=threadIdx.x)	//threadaIdx.x
-                    temp += s_Preoffset[threadIdx.x - i];
-                __syncthreads();
-                s_Preoffset[threadIdx.x] = temp;
-                __syncthreads();
-            }*/
+            //
             int value=codeStrLength;
             for(int k=1;k<32;k=k<<1){
                 int n = __shfl_up(value, k, 32);
@@ -319,6 +307,7 @@ __global__ void GPU_TiffLZWDecompression(
                 value+=s_Preoffset[laneblockId-1];
             if(count==cudaBlockCount&&threadIdx.x==CCThreadIndex) s_Preoffset[31]=value;
             if(returnflag) return;
+
             // ************************************************
             // write<=PREFIXSUMMAX
             // ************************************************
@@ -333,17 +322,15 @@ __global__ void GPU_TiffLZWDecompression(
             }
             __syncthreads();
             if(count<cudaBlockCount)
-                //outputOffset += s_Preoffset[blockDim.x-1];
                 outputOffset += s_Preoffset[31];
 
             codeIndex += blockDim.x;
-
         }
         codeIndex = threadIdx.x;
-        //outputOffset+=s_Preoffset[CCThreadIndex]+1;
+
+        //
         outputOffset+=s_Preoffset[31]+1;
     }
-
 }
 
 #endif

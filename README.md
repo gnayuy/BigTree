@@ -1,6 +1,6 @@
 # BigTree
 
-BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualized and annotated with Vaa3D-TeraFly [1][].
+BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualized and annotated with Vaa3D-TeraFly [1].
 
 More details see our paper "BigTree: high-performance hierarchical tree construction for large image data sets".
 
@@ -33,7 +33,7 @@ This is equavelent to using [TeraConverter][] as:
 
 ## references
 
-[1]: Bria A, Iannello G, Onofri L, Peng H. TeraFly: real-time three-dimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat Methods. 2016;13:192–4.
+[1]. Bria A, Iannello G, Onofri L, Peng H. TeraFly: real-time three-dimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat Methods. 2016;13:192–4.
 
 [libtiff]:http://www.libtiff.org
 [TIFF]:http://www.libtiff.org/support.html

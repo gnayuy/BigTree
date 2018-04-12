@@ -1,12 +1,14 @@
 # BigTree
 
-BigTree, Big ImaGe hierarchical TREE construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualize and annotate with Vaa3D-TeraFly [[1][]].
+BigTree, Big ImaGe hierarchical TREE construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualize and annotate with Vaa3D-TeraFly [ [1][] ].
 
 More details see our paper "BigTree: high-performance hierarchical tree construction for large image data sets".
 
 ## compile with cmake
 
 Install [libtiff][] by following the instructions on their website. This is required for read and write images.
+
+We use [cxxopts][] to parse command lines, which requires gcc > 4.9.
 
 In terminal, type commands:
 
@@ -35,4 +37,5 @@ This is equavelent to using [TeraConverter][] as:
 
 [libtiff]:http://www.libtiff.org
 [TIFF]:http://www.libtiff.org/support.html
+[cxxopts]:https://github.com/jarro2783/cxxopts
 [TeraConverter]:https://github.com/Vaa3D/Vaa3D_Wiki/wiki/TeraConverter

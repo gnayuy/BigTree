@@ -33,7 +33,7 @@ This is equavelent to using [TeraConverter][] as:
 
 ## references
 
-[1]. Bria, A., Iannello, G., Onofri, L., and Peng, H. (2016). TeraFly: real-time threedimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat. Methods 13, 192–194. doi: 10.1038/nmeth.3767
+[1]. Bria A, Iannello G, Onofri L, Peng H. TeraFly: real-time three-dimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat Methods. 2016;13:192–4. doi: 10.1038/nmeth.3767
 
 [libtiff]:http://www.libtiff.org
 [TIFF]:http://www.libtiff.org/support.html

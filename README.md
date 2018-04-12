@@ -8,6 +8,8 @@ More details see our paper "BigTree: high-performance hierarchical tree construc
 
 Install [libtiff][] by following the instructions on their website. This is required for read and write images.
 
+In terminal, type commands:
+
     % mkdir build
     % cd build
     % ccmake ..
@@ -15,17 +17,17 @@ Install [libtiff][] by following the instructions on their website. This is requ
 
 ## use BigTree
 
-To convert you images, please ensure they are stored in one folder with names sequential ordered. For example, if we need a 5-scale tree data structure, we simply type command:
+Assuming your input images are 2D image slices stored in one folder in order. For example, converting to a 5-scale tree data structure, we simply type command:
 
     % BigTree -i <path_dir_input_images> -o <path_dir_output> -n 5
     
-This is equavelent to using [TeraConverter][] command:
+This is equavelent to using [TeraConverter][] as:
 
     % teraconverter -s="<path_dir_input_images>" -d="<path_dir_output>" --sfmt="TIFF (series, 2D)" --dfmt="TIFF (tiled, 3D)" --rescale=4 --resolutions=01234 --width=256 --height=256 --depth=256 --halve=max --libtiff_rowsperstrip=-1
     
-## file formats
+## image file formats
 
-[TIFF][]: object file format
+[TIFF][]: tiff file format
 
 ## references
 

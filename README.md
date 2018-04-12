@@ -21,7 +21,7 @@ In terminal, type commands:
 
 Assuming your input images are 2D image slices stored in one folder in order. For example, converting to a 5-scale tree data structure, we simply type command:
 
-    % BigTree -i <path_dir_input_images> -o <path_dir_output> -n 5
+    % bigtree -i <path_dir_input_images> -o <path_dir_output> -n 5
     
 This is equavelent to using [TeraConverter][] as:
 

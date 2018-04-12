@@ -1,6 +1,6 @@
 # BigTree
 
-BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualize and annotate with Vaa3D-TeraFly [1].
+BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is developed to efficient reformat large-scale images data sets into a hierarchical tree data structure that can be visualized and annotated with Vaa3D-TeraFly [1].
 
 More details see our paper "BigTree: high-performance hierarchical tree construction for large image data sets".
 

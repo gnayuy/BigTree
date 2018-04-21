@@ -27,6 +27,7 @@ int main (int argc, const char *argv[])
     //
     int nScale = 3;
     string inputDir, outputDir;
+    int genMetaInfo = 0; // write mdata.bin
 
     //
     try
@@ -41,6 +42,7 @@ int main (int argc, const char *argv[])
                 ("i,input", "Input DIR", cxxopts::value<std::string>(inputDir))
                 ("o,output", "Output DIR", cxxopts::value<std::string>(outputDir))
                 ("n,resolutions", "N Resolutions", cxxopts::value<int>(nScale))
+                ("m,meta", "generate meta info only", cxxopts::value<int>(genMetaInfo))
                 ;
 
         auto cmds = options.parse(argc, argv);
@@ -74,7 +76,7 @@ int main (int argc, const char *argv[])
     }
 
     // BigTree
-    BigTree biconvert(inputDir, outputDir, nScale);
+    BigTree bigtree(inputDir, outputDir, nScale, genMetaInfo);
 
     //
     return 0;

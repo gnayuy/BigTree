@@ -68,7 +68,7 @@ TMITREE::~TMITREE()
 }
 
 //
-BigTree::BigTree(string inputdir, string outputdir, int scales)
+BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo)
 {
     // default parameters settings
     block_width = 256;
@@ -76,6 +76,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales)
     block_depth = 256;
 
     nbits = 4;
+
+    genMetaInfoOnly = genMetaInfo;
 
     // inputs
     resolutions = scales;
@@ -451,33 +453,36 @@ int BigTree::reformat()
     //
     for(long z=0, z_parts=1; z<depth; z+=z_max_res, z_parts++)
     {
-        auto start = std::chrono::high_resolution_clock::now();
-
-        ubuffer = load(z,(z+z_max_res <= depth) ? (z+z_max_res) : depth);
-
-        auto end = std::chrono::high_resolution_clock::now();
-
-        cout<<"load a sub volume takes "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<" ms."<<endl;
-
-        //
-        if(nbits)
+        if(!genMetaInfoOnly)
         {
-            long tot_size = (height * width * ((z_parts<=z_ratio) ? z_max_res : (depth%z_max_res)))*color;
-            if ( datatype == 2 )
+            auto start = std::chrono::high_resolution_clock::now();
+
+            ubuffer = load(z,(z+z_max_res <= depth) ? (z+z_max_res) : depth);
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            cout<<"load a sub volume takes "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<" ms."<<endl;
+
+            //
+            if(nbits)
             {
-                #pragma omp parallel
+                long tot_size = (height * width * ((z_parts<=z_ratio) ? z_max_res : (depth%z_max_res)))*color;
+                if ( datatype == 2 )
                 {
-                    uint16 *ptr = (uint16 *) ubuffer;
-                    #pragma omp for
-                    for ( long i=0; i<tot_size; i++ ) {
-                        ptr[i] = ptr[i] >> nbits << 1;
+                    #pragma omp parallel
+                    {
+                        uint16 *ptr = (uint16 *) ubuffer;
+                        #pragma omp for
+                        for ( long i=0; i<tot_size; i++ ) {
+                            ptr[i] = ptr[i] >> nbits << 1;
+                        }
                     }
                 }
             }
-        }
+        } // genMetaInfoOnly
 
         //saving the sub volume
-        start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
         for(int i=0; i< resolutions; i++)
         {
             // meta info for index()
@@ -621,21 +626,24 @@ int BigTree::reformat()
 
                                     //cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
 
-                                    // auto start_init = std::chrono::high_resolution_clock::now();
-                                    if(nCopies==0)
+                                    if(!genMetaInfoOnly)
                                     {
-                                        if( initTiff3DFile((char *)img_path_temp.str().c_str(),sz[0],sz[1],sz[2],sz[3],datatype_out) != 0)
+                                        // auto start_init = std::chrono::high_resolution_clock::now();
+                                        if(nCopies==0)
                                         {
-                                            cout<<"fail in initTiff3DFile\n";
-                                            return -1;
+                                            if( initTiff3DFile((char *)img_path_temp.str().c_str(),sz[0],sz[1],sz[2],sz[3],datatype_out) != 0)
+                                            {
+                                                cout<<"fail in initTiff3DFile\n";
+                                                return -1;
+                                            }
+                                            srcFile = img_path_temp.str();
                                         }
-                                        srcFile = img_path_temp.str();
-                                    }
-                                    else
-                                    {
-                                        copyFile(srcFile.c_str(), img_path_temp.str().c_str());
-                                    }
-                                    nCopies++;
+                                        else
+                                        {
+                                            copyFile(srcFile.c_str(), img_path_temp.str().c_str());
+                                        }
+                                        nCopies++;
+                                    }// genMetaInfoOnly
 
                                     //
                                     //auto end_init = std::chrono::high_resolution_clock::now();
@@ -646,6 +654,7 @@ int BigTree::reformat()
                                 } // j
                             } // after create H_DIR
                         } // z
+
 
                         //saving HERE
 
@@ -665,11 +674,14 @@ int BigTree::reformat()
                         int  n_pages_block = stacks_D[i][0][0][stack_block[i]]; // number of pages of current block
                         bool block_changed = false; // true if block is changed executing the next for cycle
 
-                        if(openTiff3DFile((char *)img_path.str().c_str(),(char *)("a"),fhandle,true))
+                        if(!genMetaInfoOnly)
                         {
-                            cout<<"fail in openTiff3DFile"<<endl;
-                            return -1;
-                        }
+                            if(openTiff3DFile((char *)img_path.str().c_str(),(char *)("a"),fhandle,true))
+                            {
+                                cout<<"fail in openTiff3DFile"<<endl;
+                                return -1;
+                            }
+                        }// genMetaInfoOnly
 
                         //
                         sz[0] = end_width - start_width + 1;
@@ -678,15 +690,19 @@ int BigTree::reformat()
                         sz[3] = 1;
                         long szChunk = sz[0]*sz[1]*sz[3]*datatype_out;
                         unsigned char *p = NULL;
-                        try
+
+                        if(!genMetaInfoOnly)
                         {
-                            p = new unsigned char [szChunk];
-                            memset(p, 0, szChunk);
-                        }
-                        catch(...)
-                        {
-                            cout<<"fail to alloc memory \n";
-                        }
+                            try
+                            {
+                                p = new unsigned char [szChunk];
+                                memset(p, 0, szChunk);
+                            }
+                            catch(...)
+                            {
+                                cout<<"fail to alloc memory \n";
+                            }
+                        }// genMetaInfoOnly
 
                         // meta info for index()
                         BLOCK block;
@@ -737,89 +753,97 @@ int BigTree::reformat()
                                 szChunk = sz[0]*sz[1]*sz[3]*datatype_out;
 
                                 //
-                                if(!p)
+                                if(!genMetaInfoOnly)
                                 {
-                                    try
+                                    if(!p)
                                     {
-                                        p = new unsigned char [szChunk];
-                                        memset(p, 0, szChunk);
-                                    }
-                                    catch(...)
-                                    {
-                                        cout<<"fail to alloc memory \n";
-                                    }
-                                }
-                                else
-                                {
-                                    memset(p, 0, szChunk);
-                                }
-                            }
-
-                            //
-                            long raw_img_width = width/(pow(2,i));
-
-                            //
-                            if ( datatype == 2 )
-                            {
-                                // 16-bit input
-
-                                if(datatype_out == 1)
-                                {
-                                    // 8-bit output
-
-                                    //
-                                    uint16 *raw_ch16 = (uint16 *) ubuffer;
-
-                                    //
-                                    #pragma omp parallel for collapse(2)
-                                    for(long i=0; i<sz[1]; i++)
-                                    {
-                                        //uint8* row_data_8bit = p + i*sz[0];
-
-                                        for(long j=0; j<sz[0]; j++)
+                                        try
                                         {
-                                            p[i*sz[0]+j] = raw_ch16[(i+start_height)*(raw_img_width) + (j+start_width)];
+                                            p = new unsigned char [szChunk];
+                                            memset(p, 0, szChunk);
+                                        }
+                                        catch(...)
+                                        {
+                                            cout<<"fail to alloc memory \n";
                                         }
                                     }
-
-                                    //
-                                    int numNonZeros = 0;
-                                    int saveVoxelThresh = 1;
-
-                                    #pragma omp parallel for reduction(+:numNonZeros)
-                                    for(int i=0; i<szChunk; i++)
+                                    else
                                     {
-                                        if(p[i]>0)
-                                            numNonZeros++;
+                                        memset(p, 0, szChunk);
                                     }
+                                }// genMetaInfoOnly
+                            }
 
-                                    if(numNonZeros>saveVoxelThresh)
+
+                            if(!genMetaInfoOnly)
+                            {
+                                //
+                                long raw_img_width = width/(pow(2,i));
+
+                                //
+                                if ( datatype == 2 )
+                                {
+                                    // 16-bit input
+
+                                    if(datatype_out == 1)
                                     {
-                                        int temp_n_chans = color;
-                                        if(temp_n_chans==2)
-                                            temp_n_chans++;
+                                        // 8-bit output
 
-                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
-                                        blocksaved = true;
+                                        //
+                                        uint16 *raw_ch16 = (uint16 *) ubuffer;
+
+                                        //
+                                        #pragma omp parallel for collapse(2)
+                                        for(long i=0; i<sz[1]; i++)
+                                        {
+                                            //uint8* row_data_8bit = p + i*sz[0];
+
+                                            for(long j=0; j<sz[0]; j++)
+                                            {
+                                                p[i*sz[0]+j] = raw_ch16[(i+start_height)*(raw_img_width) + (j+start_width)];
+                                            }
+                                        }
+
+                                        //
+                                        int numNonZeros = 0;
+                                        int saveVoxelThresh = 1;
+
+                                        #pragma omp parallel for reduction(+:numNonZeros)
+                                        for(int i=0; i<szChunk; i++)
+                                        {
+                                            if(p[i]>0)
+                                                numNonZeros++;
+                                        }
+
+                                        if(numNonZeros>saveVoxelThresh)
+                                        {
+                                            int temp_n_chans = color;
+                                            if(temp_n_chans==2)
+                                                temp_n_chans++;
+
+                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+                                            blocksaved = true;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // 16-bit output
+
                                     }
                                 }
                                 else
                                 {
-                                    // 16-bit output
-
+                                    // other datatypes
                                 }
                             }
-                            else
-                            {
-                                // other datatypes
-                            }
-                        }
 
-                        //
-                        del1dp(p);
+                            //
+                            del1dp(p);
 
-                        // close(fhandle) i.e. currently opened file
-                        TIFFClose((TIFF *) fhandle);
+                            // close(fhandle) i.e. currently opened file
+                            TIFFClose((TIFF *) fhandle);
+
+                        }// genMetaInfoOnly
 
                         //
                         start_width  += stacks_H[i][stack_row][stack_column][0];
@@ -841,7 +865,7 @@ int BigTree::reformat()
         del1dp(ubuffer);
 
         //
-        end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
         cout<<"writing sub volume's chunk images takes "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<" ms."<<endl;
     }
 

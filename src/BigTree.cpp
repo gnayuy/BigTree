@@ -739,13 +739,16 @@ int BigTree::reformat()
 
                                 slice_ind = 0;
 
-                                // close(fhandle) i.e. file corresponding to current block
-                                TIFFClose((TIFF *) fhandle);
-                                if(openTiff3DFile((char *)img_path.str().c_str(),(char *)("a"),fhandle,true))
+                                if(!genMetaInfoOnly)
                                 {
-                                    cout<<"fail in openTiff3DFile"<<endl;
-                                    return -1;
-                                }
+                                    // close(fhandle) i.e. file corresponding to current block
+                                    TIFFClose((TIFF *) fhandle);
+                                    if(openTiff3DFile((char *)img_path.str().c_str(),(char *)("a"),fhandle,true))
+                                    {
+                                        cout<<"fail in openTiff3DFile"<<endl;
+                                        return -1;
+                                    }
+                                }// genMetaInfoOnly
                                 n_pages_block = stacks_D[i][0][0][stack_block[i]+1];
                                 block_changed = true;
 

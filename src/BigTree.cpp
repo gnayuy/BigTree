@@ -79,6 +79,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo)
 
     genMetaInfoOnly = genMetaInfo;
 
+    ubuffer = NULL;
+
     // inputs
     resolutions = scales;
 
@@ -525,18 +527,21 @@ int BigTree::reformat()
             //halvesampling resolution if current resolution is not the deepest one
             if(i!=0)
             {
-                if ( halve_pow2[i] == (halve_pow2[i-1]+1) )
+                if(!genMetaInfoOnly)
                 {
-                    halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
-                }
-                else if ( halve_pow2[i] == halve_pow2[i-1] )
-                {
-                    halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
-                }
-                else
-                {
-                    cout<<"halve sampling level "<<halve_pow2[i]<<" not supported at resolution "<<i<<endl;
-                    return -1;
+                    if ( halve_pow2[i] == (halve_pow2[i-1]+1) )
+                    {
+                        halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
+                    }
+                    else if ( halve_pow2[i] == halve_pow2[i-1] )
+                    {
+                        halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
+                    }
+                    else
+                    {
+                        cout<<"halve sampling level "<<halve_pow2[i]<<" not supported at resolution "<<i<<endl;
+                        return -1;
+                    }
                 }
             }
 
@@ -777,7 +782,6 @@ int BigTree::reformat()
                                 }// genMetaInfoOnly
                             }
 
-
                             if(!genMetaInfoOnly)
                             {
                                 //
@@ -838,15 +842,15 @@ int BigTree::reformat()
                                 {
                                     // other datatypes
                                 }
-                            }
 
-                            //
-                            del1dp(p);
+                                //
+                                del1dp(p);
 
-                            // close(fhandle) i.e. currently opened file
-                            TIFFClose((TIFF *) fhandle);
+                                // close(fhandle) i.e. currently opened file
+                                TIFFClose((TIFF *) fhandle);
 
-                        }// genMetaInfoOnly
+                            }// genMetaInfoOnly
+                        }
 
                         //
                         start_width  += stacks_H[i][stack_row][stack_column][0];
@@ -891,75 +895,6 @@ int BigTree::index()
 
         //
         LAYER layer = meta.layers[res_i];
-
-
-//        //
-//        ofstream outfile(filename.c_str(), ios::out | ios::app | ios::binary);
-
-//        if(outfile.is_open())
-//        {
-//            outfile << meta.mdata_version;
-//            outfile << meta.reference_V;
-//            outfile << meta.reference_H;
-//            outfile << meta.reference_D;
-
-//            outfile << layer.vs_x;
-//            outfile << layer.vs_y;
-//            outfile << layer.vs_z;
-//            outfile << layer.vs_x;
-//            outfile << layer.vs_y;
-//            outfile << layer.vs_z;
-
-//            outfile << meta.org_V;
-//            outfile << meta.org_H;
-//            outfile << meta.org_D;
-
-//            outfile << layer.dim_V;
-//            outfile << layer.dim_H;
-//            outfile << layer.dim_D;
-
-//            outfile << layer.rows;
-//            outfile << layer.cols;
-
-//            int n = layer.blocks.size(); // rows * cols
-
-//            cout<<"test "<<n<<" = "<<layer.rows*layer.cols<<endl;
-
-//            for(int i=0; i<n; i++)
-//            {
-//                BLOCK block = layer.blocks[i];
-//                uint32 N_BLOCKS = block.nBlocksPerDir;
-
-//                outfile << block.height;
-//                outfile << block.width;
-//                outfile << block.depth;
-
-//                outfile << N_BLOCKS;
-
-//                outfile << block.color;
-//                outfile << block.offset_V;
-//                outfile << block.offset_H;
-//                outfile << block.lengthDirName;
-//                outfile << block.dirName;
-
-//                for(int j=0; j<N_BLOCKS; j++)
-//                {
-//                    outfile << block.lengthFileName;
-//                    outfile << block.fileNames[j];
-//                    outfile << block.depth;
-//                    outfile << block.offsets_D[j];
-//                }
-//                outfile << block.bytesPerVoxel;
-//            }
-
-//            //
-//            outfile.close();
-//        }
-//        else
-//        {
-//            cout<<"fail in write file "<<filename<<endl;
-//            return -1;
-//        }
 
         // save
         FILE *file;
@@ -1009,11 +944,11 @@ int BigTree::index()
 
             for(int j=0; j<N_BLOCKS; j++)
             {
-                if(block.nonZeroBlocks[j]==false)
+                if(block.nonZeroBlocks[j]==false && !genMetaInfoOnly)
                 {
                     if( remove( block.fileNames[j].c_str() ) != 0 )
                     {
-                        cout<<"Error deleting file \n";
+                        cout<<"Error deleting file "<<block.fileNames[j]<<endl;
                         return -1;
                     }
                 }

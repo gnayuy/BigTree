@@ -380,7 +380,7 @@ uint8 *BigTree::load(long zs, long ze)
 
     try
     {
-        subvol = new uint8 [sbv_V * sbv_H* sbv_D * datatype];
+        subvol = new uint8 [sbv_V * sbv_H * sbv_D * datatype];
     }
     catch(...)
     {
@@ -550,8 +550,6 @@ int BigTree::reformat()
                 }
             }
 
-            cout<<i<<" test .... \n";
-
             //saving at current resolution if it has been selected and iff buffer is at least 1 voxel (Z) deep
             if((z_size/(pow(2,halve_pow2[i]))) > 0)
             {
@@ -627,9 +625,6 @@ int BigTree::reformat()
                                 int slice_start_temp = 0;
                                 for ( int j=0; j < n_stacks_D[i]; j++ )
                                 {
-
-                                    cout<<j<<" "<<n_stacks_D[i]<<endl;
-
                                     sz[2] = stacks_D[i][stack_row][stack_column][j];
 
                                     std::stringstream abs_pos_z_temp;
@@ -640,7 +635,7 @@ int BigTree::reformat()
                                     std::stringstream img_path_temp;
                                     img_path_temp << H_DIR_path.str() << "/" << multires_merging_x_pos.str() << "_" << multires_merging_y_pos.str() << "_" << abs_pos_z_temp.str()<<".tif";
 
-                                    cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
+                                    //cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
 
                                     if(!genMetaInfoOnly)
                                     {
@@ -802,13 +797,15 @@ int BigTree::reformat()
                                 if ( datatype == 2 )
                                 {
                                     // 16-bit input
+                                    long offset = buffer_z*(height/pow(2,i))*(width/pow(2,i));
+                                    uint16 *raw_ch16 = (uint16 *) ubuffer + offset;
+
+                                    //cout<<"pointer p: "<<static_cast<void*>(p)<<endl;
+                                    //cout<<"pointer raw data: "<<static_cast<void*>(raw_ch16)<<endl;
 
                                     if(datatype_out == 1)
                                     {
                                         // 8-bit output
-
-                                        //
-                                        uint16 *raw_ch16 = (uint16 *) ubuffer;
 
                                         //
                                         #pragma omp parallel for collapse(2)
@@ -852,14 +849,14 @@ int BigTree::reformat()
                                     // other datatypes
                                 }
 
-                                //
-                                del1dp(p);
-
-                                // close(fhandle) i.e. currently opened file
-                                TIFFClose((TIFF *) fhandle);
-
                             }// genMetaInfoOnly
                         }
+
+                        //
+                        del1dp(p);
+
+                        // close(fhandle) i.e. currently opened file
+                        TIFFClose((TIFF *) fhandle);
 
                         //
                         start_width  += stacks_H[i][stack_row][stack_column][0];

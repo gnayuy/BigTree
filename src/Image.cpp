@@ -648,8 +648,6 @@ char *initTiff3DFile(char *filename, int sz0, int sz1, int sz2, int sz3, int dat
     {
         for(long slice=0; slice<Npages; slice++)
         {
-            cout<<slice<<endl;
-
             //
             TIFFSetDirectory(output, slice);
 
@@ -817,7 +815,7 @@ int openTiff3DFile(char *filename, char *mode, void *&fhandle, bool reopen)
 }
 
 //
-char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsigned int  img_width, unsigned int  img_height, int spp, int bpp, int NPages)
+char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsigned int img_width, unsigned int img_height, int spp, int bpp, int NPages)
 {
     //
     int rowsPerStrip = -1;
@@ -846,8 +844,11 @@ char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsi
 
     // the file has been already opened: rowsPerStrip it is not too large for this image width
     if ( rowsPerStrip == -1 )
+    {
         TIFFWriteEncodedStrip(output, 0, img, img_width * img_height * spp * (bpp/8));
-    else {
+    }
+    else
+    {
         int StripsPerImage,LastStripSize;
         uint32 rps = (uint32)rowsPerStrip;
         unsigned char *buf = img;

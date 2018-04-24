@@ -241,8 +241,6 @@ int BigTree::init()
     DIR *outdir = opendir(dstdir.c_str());
     if(outdir == NULL)
     {
-        cout<<"mkdir "<<dstdir<<endl;
-
         // mkdir outdir
         if(makeDir(dstdir.c_str()))
         {
@@ -327,7 +325,7 @@ int BigTree::init()
                     stacks_H[res_i][stack_row][stack_col][stack_sli] =
                             ((uint32)(width/pow(2,res_i)))  / n_stacks_H[res_i] + (stack_col < ((int)(width/pow(2,res_i)))  % n_stacks_H[res_i] ? 1:0);
                     stacks_D[res_i][stack_row][stack_col][stack_sli] =
-                            ((uint32)(depth/pow(2,halve_pow2[res_i])))  / n_stacks_D[res_i] + (stack_sli < ((int)(depth/pow(2,halve_pow2[res_i])))  % n_stacks_D[res_i] ? 1:0);
+                            ((uint32)(depth/pow(2,halve_pow2[res_i])))  / n_stacks_D[res_i] + (stack_sli < ((int)(depth/pow(2,halve_pow2[res_i]))) % n_stacks_D[res_i] ? 1:0);
                 }
             }
         }
@@ -374,7 +372,8 @@ uint8 *BigTree::load(long zs, long ze)
     sbv_V = height;
     sbv_H = width;
     sbv_D = ze - zs;
-    //D0 = zs;
+
+    z_ratio=sbv_D/z_max_res;
 
     //
     uint8 *subvol = NULL;
@@ -468,25 +467,29 @@ int BigTree::reformat()
             //
             if(nbits)
             {
-                long tot_size = (height * width * ((z_parts<=z_ratio) ? z_max_res : (depth%z_max_res)))*color;
+                long totalvoxels = (height * width * ((z_parts<=z_ratio) ? z_max_res : (depth%z_max_res)))*color;
                 if ( datatype == 2 )
                 {
                     #pragma omp parallel
                     {
                         uint16 *ptr = (uint16 *) ubuffer;
                         #pragma omp for
-                        for ( long i=0; i<tot_size; i++ ) {
+                        for(long i=0; i<totalvoxels; i++ )
+                        {
                             ptr[i] = ptr[i] >> nbits << 1;
                         }
                     }
                 }
             }
+
         } // genMetaInfoOnly
 
         //saving the sub volume
         auto start = std::chrono::high_resolution_clock::now();
         for(int i=0; i< resolutions; i++)
         {
+            cout<<"resolution "<<i<<endl;
+
             // meta info for index()
             LAYER layer;
             layer.rows = n_stacks_V[i];
@@ -517,11 +520,11 @@ int BigTree::reformat()
             abs_pos_z.fill('0');
             abs_pos_z << (int)((pow(2,halve_pow2[i])*slice_start[i]) * 10);
 
-            //compute the number of slice of previous groups at resolution i
-            //note that z_parts in the number and not an index (starts from 1)
+            // compute the number of slice of previous groups at resolution i
+            // note that z_parts in the number and not an index (starts from 1)
             long n_slices_pred  = (z_parts - 1) * z_max_res / pow(2,halve_pow2[i]);
 
-            //buffer size along D is different when the remainder of the subdivision by z_max_res is considered
+            // buffer size along D is different when the remainder of the subdivision by z_max_res is considered
             long z_size = (z_parts<=z_ratio) ? z_max_res : (depth%z_max_res);
 
             //halvesampling resolution if current resolution is not the deepest one
@@ -529,6 +532,8 @@ int BigTree::reformat()
             {
                 if(!genMetaInfoOnly)
                 {
+                    cout<<"test ... "<<halve_pow2[i]<<" ?= "<<(halve_pow2[i-1]+1)<<endl;
+
                     if ( halve_pow2[i] == (halve_pow2[i-1]+1) )
                     {
                         halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
@@ -544,6 +549,8 @@ int BigTree::reformat()
                     }
                 }
             }
+
+            cout<<i<<" test .... \n";
 
             //saving at current resolution if it has been selected and iff buffer is at least 1 voxel (Z) deep
             if((z_size/(pow(2,halve_pow2[i]))) > 0)
@@ -618,7 +625,11 @@ int BigTree::reformat()
 
                                 //
                                 int slice_start_temp = 0;
-                                for ( int j=0; j < n_stacks_D[i]; j++ ) {
+                                for ( int j=0; j < n_stacks_D[i]; j++ )
+                                {
+
+                                    cout<<j<<" "<<n_stacks_D[i]<<endl;
+
                                     sz[2] = stacks_D[i][stack_row][stack_column][j];
 
                                     std::stringstream abs_pos_z_temp;
@@ -629,14 +640,14 @@ int BigTree::reformat()
                                     std::stringstream img_path_temp;
                                     img_path_temp << H_DIR_path.str() << "/" << multires_merging_x_pos.str() << "_" << multires_merging_y_pos.str() << "_" << abs_pos_z_temp.str()<<".tif";
 
-                                    //cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
+                                    cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
 
                                     if(!genMetaInfoOnly)
                                     {
                                         // auto start_init = std::chrono::high_resolution_clock::now();
                                         if(nCopies==0)
                                         {
-                                            if( initTiff3DFile((char *)img_path_temp.str().c_str(),sz[0],sz[1],sz[2],sz[3],datatype_out) != 0)
+                                            if(initTiff3DFile((char *)img_path_temp.str().c_str(),sz[0],sz[1],sz[2],sz[3],datatype_out) != 0)
                                             {
                                                 cout<<"fail in initTiff3DFile\n";
                                                 return -1;
@@ -659,7 +670,6 @@ int BigTree::reformat()
                                 } // j
                             } // after create H_DIR
                         } // z
-
 
                         //saving HERE
 
@@ -782,6 +792,7 @@ int BigTree::reformat()
                                 }// genMetaInfoOnly
                             }
 
+                            //
                             if(!genMetaInfoOnly)
                             {
                                 //
@@ -803,8 +814,6 @@ int BigTree::reformat()
                                         #pragma omp parallel for collapse(2)
                                         for(long i=0; i<sz[1]; i++)
                                         {
-                                            //uint8* row_data_8bit = p + i*sz[0];
-
                                             for(long j=0; j<sz[0]; j++)
                                             {
                                                 p[i*sz[0]+j] = raw_ch16[(i+start_height)*(raw_img_width) + (j+start_width)];

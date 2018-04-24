@@ -24,6 +24,13 @@ int main (int argc, const char *argv[])
     // assuming input 2D TIFF (LZW compressed) images and convert to 3D TIFF blocks
     // 3D block with 256x256x256
 
+    if(argc<2)
+    {
+        cout<<"bigtree version 1.0\n";
+        cout<<"bigtree -h\n";
+        return 0;
+    }
+
     //
     int nScale = 3;
     string inputDir, outputDir;
@@ -32,7 +39,7 @@ int main (int argc, const char *argv[])
     //
     try
     {
-        cxxopts::Options options(argv[0], " -i <input_DIR> -o <output_DIR> -n <Number_of_Resolutions_of_TMITREE>");
+        cxxopts::Options options(argv[0], "bigtree -i <input_DIR> -o <output_DIR> -n <Number_of_Resolutions_of_TMITREE>");
         options
                 .positional_help("[optional args]")
                 .show_positional_help();

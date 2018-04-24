@@ -581,7 +581,7 @@ void readTiff( stringstream *dataStreamInMemory, unsigned char *&img, unsigned i
 
 // save a 3D chunk tif image with all zeros
 char *initTiff3DFile(char *filename, int sz0, int sz1, int sz2, int sz3, int datatype)
-{
+{   
     //
     uint32 XSIZE  = sz0;
     uint32 YSIZE  = sz1;
@@ -602,7 +602,7 @@ char *initTiff3DFile(char *filename, int sz0, int sz1, int sz2, int sz3, int dat
         return ((char *) "More than 3 channels in Tiff files.");
 
     //
-    long szSlice = ((long)XSIZE) * ((long) YSIZE) * spp * (bpp/8);
+    long szSlice = (long)XSIZE * (long)YSIZE * (long)spp * (long)datatype;
     unsigned char *fakeData=NULL;
     try
     {
@@ -634,80 +634,104 @@ char *initTiff3DFile(char *filename, int sz0, int sz1, int sz2, int sz3, int dat
             output = TIFFOpen(filename,"w8");
     }
     else
+    {
         output = TIFFOpen(filename,"w");
+    }
 
-
-    if (!output) {
+    if (!output)
+    {
         return ((char *) "Cannot open the file.");
     }
 
-    check = TIFFSetField(output, TIFFTAG_IMAGEWIDTH, XSIZE);
-    if (!check) {
-        return ((char *) "Cannot set the image width.");
-    }
+    //
+    if ( rowsPerStrip == -1 )
+    {
+        for(long slice=0; slice<Npages; slice++)
+        {
+            cout<<slice<<endl;
 
-    check = TIFFSetField(output, TIFFTAG_IMAGELENGTH, YSIZE);
-    if (!check) {
-        return ((char *) "Cannot set the image height.");
-    }
+            //
+            TIFFSetDirectory(output, slice);
 
-    check = TIFFSetField(output, TIFFTAG_BITSPERSAMPLE, bpp);
-    if (!check) {
-        return ((char *) "Cannot set the image bit per sample.");
-    }
+            //
+            check = TIFFSetField(output, TIFFTAG_IMAGEWIDTH, XSIZE);
+            if (!check) {
+                return ((char *) "Cannot set the image width.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_SAMPLESPERPIXEL, spp);
-    if (!check) {
-        return ((char *) "Cannot set the image sample per pixel.");
-    }
+            check = TIFFSetField(output, TIFFTAG_IMAGELENGTH, YSIZE);
+            if (!check) {
+                return ((char *) "Cannot set the image height.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_ROWSPERSTRIP, (rowsPerStrip == -1) ? YSIZE : (uint32)rowsPerStrip);
-    if (!check) {
-        return ((char *) "Cannot set the image rows per strip.");
-    }
+            check = TIFFSetField(output, TIFFTAG_BITSPERSAMPLE, bpp);
+            if (!check) {
+                return ((char *) "Cannot set the image bit per sample.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-    if (!check) {
-        return ((char *) "Cannot set the image orientation.");
-    }
+            check = TIFFSetField(output, TIFFTAG_SAMPLESPERPIXEL, spp);
+            if (!check) {
+                return ((char *) "Cannot set the image sample per pixel.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_COMPRESSION, COMPPRESSION_METHOD);
-    if (!check) {
-        return ((char *) "Cannot set the compression tag.");
-    }
+            check = TIFFSetField(output, TIFFTAG_ROWSPERSTRIP, (rowsPerStrip == -1) ? YSIZE : (uint32)rowsPerStrip);
+            if (!check) {
+                return ((char *) "Cannot set the image rows per strip.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_PLANARCONFIG,PLANARCONFIG_CONTIG);
-    if (!check) {
-        return ((char *) "Cannot set the planarconfig tag.");
-    }
+            check = TIFFSetField(output, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+            if (!check) {
+                return ((char *) "Cannot set the image orientation.");
+            }
 
-    if ( spp == 1 )
-        check = TIFFSetField(output, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-    else // spp == 3
-        check = TIFFSetField(output, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
-    if (!check) {
-        return ((char *) "Cannot set the photometric tag.");
-    }
+            check = TIFFSetField(output, TIFFTAG_COMPRESSION, COMPPRESSION_METHOD);
+            if (!check) {
+                return ((char *) "Cannot set the compression tag.");
+            }
 
-    /* We are writing single page of the multipage file */
-    check = TIFFSetField(output, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
-    if (!check) {
-        return ((char *) "Cannot set the subfiletype tag.");
-    }
+            check = TIFFSetField(output, TIFFTAG_PLANARCONFIG,PLANARCONFIG_CONTIG);
+            if (!check) {
+                return ((char *) "Cannot set the planarconfig tag.");
+            }
 
-    check = TIFFSetField(output, TIFFTAG_PAGENUMBER, 0, Npages);
-    if (!check) {
-        return ((char *) "Cannot set the page number.");
-    }
+            if ( spp == 1 )
+                check = TIFFSetField(output, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+            else // spp == 3
+                check = TIFFSetField(output, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+            if (!check) {
+                return ((char *) "Cannot set the photometric tag.");
+            }
 
-    if ( rowsPerStrip == -1 ) {
-        TIFFSetDirectory(output,0);
-        check = TIFFWriteEncodedStrip(output, 0, fakeData, szSlice);
-        if (!check) {
-            return ((char *) "Cannot write encoded strip to file.");
+            /* We are writing single page of the multipage file */
+            check = TIFFSetField(output, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
+            if (!check) {
+                return ((char *) "Cannot set the subfiletype tag.");
+            }
+
+            check = TIFFSetField(output, TIFFTAG_PAGENUMBER, slice, Npages);
+            if (!check) {
+                return ((char *) "Cannot set the page number.");
+            }
+
+            if(!TIFFWriteEncodedStrip(output, 0, fakeData, szSlice))
+            {
+                return ((char *) "Cannot write encoded strip to file.");
+            }
+
+            //
+            if (!TIFFWriteDirectory(output))
+            {
+                return ((char *) "Cannot write a new directory.");
+            }
         }
     }
-    else {
+    else
+    {
+        // TODO: modify codes to save 3D image stack later
+
+        //
+        // save one slice
+        //
         int check,StripsPerImage,LastStripSize;
         uint32 rps = (uint32)rowsPerStrip;
         unsigned char *buf = fakeData;
@@ -738,11 +762,7 @@ char *initTiff3DFile(char *filename, int sz0, int sz1, int sz2, int sz3, int dat
         delete[] fakeData;
     }
 
-    check = TIFFWriteDirectory(output);
-    if (!check) {
-        return ((char *) "Cannot write a new directory.");
-    }
-
+    //
     TIFFClose(output);
 
     //

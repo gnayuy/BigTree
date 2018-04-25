@@ -68,7 +68,7 @@ TMITREE::~TMITREE()
 }
 
 //
-BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo)
+BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo, bool genZeroData)
 {
     // default parameters settings
     block_width = 256;
@@ -78,6 +78,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo)
     nbits = 4;
 
     genMetaInfoOnly = genMetaInfo;
+
+    genZeroDataOnly = genZeroData;
 
     ubuffer = NULL;
 
@@ -454,7 +456,7 @@ int BigTree::reformat()
     //
     for(long z=0, z_parts=1; z<depth; z+=z_max_res, z_parts++)
     {
-        if(!genMetaInfoOnly)
+        if(!genMetaInfoOnly && !genZeroDataOnly)
         {
             auto start = std::chrono::high_resolution_clock::now();
 
@@ -530,16 +532,16 @@ int BigTree::reformat()
             //halvesampling resolution if current resolution is not the deepest one
             if(i!=0)
             {
-                if(!genMetaInfoOnly)
+                if(!genMetaInfoOnly && !genZeroDataOnly)
                 {
-                    cout<<"test ... "<<halve_pow2[i]<<" ?= "<<(halve_pow2[i-1]+1)<<endl;
-
                     if ( halve_pow2[i] == (halve_pow2[i-1]+1) )
                     {
+                        // 3D
                         halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
                     }
                     else if ( halve_pow2[i] == halve_pow2[i-1] )
                     {
+                        // 2D
                         halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
                     }
                     else
@@ -684,7 +686,7 @@ int BigTree::reformat()
                         int  n_pages_block = stacks_D[i][0][0][stack_block[i]]; // number of pages of current block
                         bool block_changed = false; // true if block is changed executing the next for cycle
 
-                        if(!genMetaInfoOnly)
+                        if(!genMetaInfoOnly && !genZeroDataOnly)
                         {
                             if(openTiff3DFile((char *)img_path.str().c_str(),(char *)("a"),fhandle,true))
                             {
@@ -701,7 +703,7 @@ int BigTree::reformat()
                         long szChunk = sz[0]*sz[1]*sz[3]*datatype_out;
                         unsigned char *p = NULL;
 
-                        if(!genMetaInfoOnly)
+                        if(!genMetaInfoOnly && !genZeroDataOnly)
                         {
                             try
                             {
@@ -749,7 +751,7 @@ int BigTree::reformat()
 
                                 slice_ind = 0;
 
-                                if(!genMetaInfoOnly)
+                                if(!genMetaInfoOnly && !genZeroDataOnly)
                                 {
                                     // close(fhandle) i.e. file corresponding to current block
                                     TIFFClose((TIFF *) fhandle);
@@ -766,7 +768,7 @@ int BigTree::reformat()
                                 szChunk = sz[0]*sz[1]*sz[3]*datatype_out;
 
                                 //
-                                if(!genMetaInfoOnly)
+                                if(!genMetaInfoOnly && !genZeroDataOnly)
                                 {
                                     if(!p)
                                     {
@@ -788,7 +790,7 @@ int BigTree::reformat()
                             }
 
                             //
-                            if(!genMetaInfoOnly)
+                            if(!genMetaInfoOnly && !genZeroDataOnly)
                             {
                                 //
                                 long raw_img_width = width/(pow(2,i));
@@ -852,11 +854,14 @@ int BigTree::reformat()
                             }// genMetaInfoOnly
                         }
 
-                        //
-                        del1dp(p);
+                        if(!genMetaInfoOnly && !genZeroDataOnly)
+                        {
+                            //
+                            del1dp(p);
 
-                        // close(fhandle) i.e. currently opened file
-                        TIFFClose((TIFF *) fhandle);
+                            // close(fhandle) i.e. currently opened file
+                            TIFFClose((TIFF *) fhandle);
+                        }
 
                         //
                         start_width  += stacks_H[i][stack_row][stack_column][0];
@@ -950,21 +955,27 @@ int BigTree::index()
 
             for(int j=0; j<N_BLOCKS; j++)
             {
-                if(block.nonZeroBlocks[j]==false && !genMetaInfoOnly)
-                {
-                    if( remove( block.fileNames[j].c_str() ) != 0 )
-                    {
-                        cout<<"Error deleting file "<<block.fileNames[j]<<endl;
-                        return -1;
-                    }
-                }
-                else
-                {
-                    fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
-                    fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
-                    fwrite(&(block.depth), sizeof(uint32), 1, file);
-                    fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
-                }
+//                if(block.nonZeroBlocks[j]==false && !genMetaInfoOnly)
+//                {
+//                    if( remove( block.fileNames[j].c_str() ) != 0 )
+//                    {
+//                        cout<<"Error deleting file "<<block.fileNames[j]<<endl;
+//                        return -1;
+//                    }
+//                }
+//                else
+//                {
+//                    fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
+//                    fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
+//                    fwrite(&(block.depth), sizeof(uint32), 1, file);
+//                    fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
+//                }
+
+                //
+                fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
+                fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
+                fwrite(&(block.depth), sizeof(uint32), 1, file);
+                fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
             }
             fwrite(&(block.bytesPerVoxel), sizeof(uint32), 1, file);
         }

@@ -67,7 +67,7 @@ public:
 class BigTree
 {
 public:
-    BigTree(string inputdir, string outputdir, int scales, int genMetaInfo=0);
+    BigTree(string inputdir, string outputdir, int scales, int genMetaInfo=0, bool genZeroData=false);
     ~BigTree();
 
 public:
@@ -97,4 +97,5 @@ public:
 
     TMITREE meta;
     int genMetaInfoOnly;
+    bool genZeroDataOnly;
 };

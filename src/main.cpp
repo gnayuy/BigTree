@@ -35,6 +35,7 @@ int main (int argc, const char *argv[])
     int nScale = 3;
     string inputDir, outputDir;
     int genMetaInfo = 0; // write mdata.bin
+    bool genZeroData = false;
 
     //
     try
@@ -50,6 +51,7 @@ int main (int argc, const char *argv[])
                 ("o,output", "Output DIR", cxxopts::value<std::string>(outputDir))
                 ("n,resolutions", "N Resolutions", cxxopts::value<int>(nScale))
                 ("m,meta", "generate meta info only", cxxopts::value<int>(genMetaInfo))
+                ("z,zeros", "generate zero tiff images", cxxopts::value<bool>(genZeroData))
                 ;
 
         auto cmds = options.parse(argc, argv);
@@ -72,7 +74,17 @@ int main (int argc, const char *argv[])
 
         if (cmds.count("n"))
         {
-            std::cout << " -- Convert data into " << cmds["n"].as<int>() << " scales" << std::endl;
+            std::cout << " -- Convert data into " << cmds["resolutions"].as<int>() << " scales" << std::endl;
+        }
+
+        if (cmds.count("m"))
+        {
+            std::cout << " -- Generate mdata.bin " << cmds["meta"].as<int>() << std::endl;
+        }
+
+        if (cmds.count("z"))
+        {
+            std::cout << " -- Generate zero tiff images " << cmds["zeros"].as<bool>() << std::endl;
         }
 
     }
@@ -83,7 +95,7 @@ int main (int argc, const char *argv[])
     }
 
     // BigTree
-    BigTree bigtree(inputDir, outputDir, nScale, genMetaInfo);
+    BigTree bigtree(inputDir, outputDir, nScale, genMetaInfo, genZeroData);
 
     //
     return 0;

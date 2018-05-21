@@ -25,10 +25,10 @@ int makeDir(const char *filepath)
             return -1;
         }
     }
-    else
-    {
-        cout<<"folder "<<filepath<<" already exists"<<endl;
-    }
+//    else
+//    {
+//        cout<<"folder "<<filepath<<" already exists"<<endl;
+//    }
 
     //
     return 0;

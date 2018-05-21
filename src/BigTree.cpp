@@ -679,7 +679,7 @@ int BigTree::reformat()
                         std::stringstream img_path;
                         img_path << partial_img_path.str() << abs_pos_z.str() << ".tif";
 
-                        //cout<<"img_path "<<img_path.str()<<endl;
+                        cout<<"img_path "<<img_path.str()<<endl;
 
                         //
                         void *fhandle = 0;
@@ -733,11 +733,13 @@ int BigTree::reformat()
 
                         bool blocksaved = false;
 
-                        //cout<<"z "<<z<<endl;
+                        cout<<"z "<<z<<endl;
 
                         // WARNING: assumes that block size along z is not less that z_size/(powInt(2,i))
                         for(int buffer_z=0; buffer_z<z_size/(pow(2,halve_pow2[i])); buffer_z++, slice_ind++)
                         {
+                            cout<<"buffer_z "<<buffer_z<<endl;
+
                             // D0 must be subtracted because z is an absolute index in volume while slice index should be computed on a relative basis (i.e. starting form 0)
                             if ( (z / pow(2,halve_pow2[i]) + buffer_z) > slice_end[i] && !block_changed)
                             {
@@ -748,6 +750,8 @@ int BigTree::reformat()
                                 abs_pos_z_next << (pow(2,halve_pow2[i])*(slice_end[i]+1)) * 10;
                                 img_path.str("");
                                 img_path << partial_img_path.str() << abs_pos_z_next.str() << ".tif";
+
+                                cout<<"img_path "<<img_path.str()<<endl;
 
                                 slice_ind = 0;
 
@@ -901,6 +905,8 @@ int BigTree::index()
     //
     for(int res_i=0; res_i< resolutions; res_i++)
     {
+        cout<<"res_i "<<res_i<<endl;
+
         //
         string filename = filePaths[res_i] + "/mdata.bin";
 
@@ -931,6 +937,28 @@ int BigTree::index()
         fwrite(&(layer.rows), sizeof(uint16), 1, file);
         fwrite(&(layer.cols), sizeof(uint16), 1, file);
 
+        cout<<"filename "<<filename<<endl;
+
+        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
+        cout<<"meta.reference_V "<<meta.reference_V<<endl;
+        cout<<"meta.reference_H "<<meta.reference_H<<endl;
+        cout<<"meta.reference_D "<<meta.reference_D<<endl;
+        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+        cout<<"meta.org_V "<<meta.org_V<<endl;
+        cout<<"meta.org_H "<<meta.org_H<<endl;
+        cout<<"meta.org_D "<<meta.org_D<<endl;
+        cout<<"layer.dim_V "<<layer.dim_V<<endl;
+        cout<<"layer.dim_H "<<layer.dim_H<<endl;
+        cout<<"layer.dim_D "<<layer.dim_D<<endl;
+        cout<<"layer.rows "<<layer.rows<<endl;
+        cout<<"layer.cols "<<layer.cols<<endl;
+
+
         int n = layer.blocks.size(); // rows * cols
 
         for(int i=0; i<n; i++)
@@ -952,6 +980,19 @@ int BigTree::index()
             fwrite(&(block.offset_H), sizeof(int), 1, file);
             fwrite(&(block.lengthDirName), sizeof(uint16), 1, file);
             fwrite(const_cast<char *>(block.dirName.c_str()), block.lengthDirName, 1, file);
+
+
+            cout<<"... "<<endl;
+            cout<<"block.height "<<block.height<<endl;
+            cout<<"block.width "<<block.width<<endl;
+            cout<<"block.depth "<<block.depth<<endl;
+            cout<<"N_BLOCKS "<<N_BLOCKS<<endl;
+            cout<<"block.color "<<block.color<<endl;
+            cout<<"block.offset_V "<<block.offset_V<<endl;
+            cout<<"block.offset_H "<<block.offset_H<<endl;
+            cout<<"block.lengthDirName "<<block.lengthDirName<<endl;
+            cout<<"block.dirName "<<block.dirName<<endl;
+
 
             for(int j=0; j<N_BLOCKS; j++)
             {
@@ -976,8 +1017,17 @@ int BigTree::index()
                 fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
                 fwrite(&(block.depth), sizeof(uint32), 1, file);
                 fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
+
+                cout<<"... ..."<<endl;
+                cout<<"block.lengthFileName "<<block.lengthFileName<<endl;
+                cout<<"block.fileNames[j] "<<block.fileNames[j]<<endl;
+                cout<<"block.depth "<<block.depth<<endl;
+                cout<<"block.offsets_D[j] "<<block.offsets_D[j]<<endl;
+
             }
             fwrite(&(block.bytesPerVoxel), sizeof(uint32), 1, file);
+
+            cout<<"block.bytesPerVoxel "<<block.bytesPerVoxel<<endl;
         }
         fclose(file);
     }

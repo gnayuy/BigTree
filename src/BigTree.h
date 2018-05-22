@@ -47,6 +47,7 @@ public:
     uint32 dim_V, dim_H, dim_D;
 
     vector<BLOCK> blocks;
+    uint32 n_scale;
 };
 
 // blocks in each resolution

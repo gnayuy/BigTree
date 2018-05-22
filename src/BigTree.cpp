@@ -73,7 +73,7 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     // default parameters settings
     block_width = 256;
     block_height = 256;
-    block_depth = 256;
+    block_depth = 32;
 
     nbits = 4;
 
@@ -357,7 +357,7 @@ int BigTree::init()
     z_max_res = max(min(MAX_IMAGES_STREAM,(int)block_depth/2),(int)pow(2,halve_pow2[resolutions-1]));
     if ( (z_max_res > 1) && z_max_res > block_depth/2 )
     {
-        cout<<"too much resolutions "<<resolutions<<endl;
+        cout<<"too many resolutions "<<resolutions<<endl;
         return -1;
     }
     z_ratio=depth/z_max_res;
@@ -441,6 +441,9 @@ uint8 *BigTree::load(long zs, long ze)
 
 int BigTree::reformat()
 {
+    // meta
+    vector<LAYER> layers;
+
     //
     int stack_block[TMITREE_MAX_HEIGHT];
     int slice_start[TMITREE_MAX_HEIGHT];
@@ -627,6 +630,12 @@ int BigTree::reformat()
                                 int slice_start_temp = 0;
                                 for ( int j=0; j < n_stacks_D[i]; j++ )
                                 {
+
+                                    bool copying = false;
+
+                                    if(sz[2] == stacks_D[i][stack_row][stack_column][j])
+                                        copying = true;
+
                                     sz[2] = stacks_D[i][stack_row][stack_column][j];
 
                                     std::stringstream abs_pos_z_temp;
@@ -637,7 +646,7 @@ int BigTree::reformat()
                                     std::stringstream img_path_temp;
                                     img_path_temp << H_DIR_path.str() << "/" << multires_merging_x_pos.str() << "_" << multires_merging_y_pos.str() << "_" << abs_pos_z_temp.str()<<".tif";
 
-                                    //cout<<"z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
+                                    //cout<<"when z=0: z "<<z<<" ("<<sz[0]<<", "<<sz[1]<<", "<<sz[2]<<") "<<abs_pos_z_temp.str()<<endl;
 
                                     if(!genMetaInfoOnly)
                                     {
@@ -651,9 +660,17 @@ int BigTree::reformat()
                                             }
                                             srcFile = img_path_temp.str();
                                         }
-                                        else
+                                        else if(copying)
                                         {
                                             copyFile(srcFile.c_str(), img_path_temp.str().c_str());
+                                        }
+                                        else
+                                        {
+                                            if(initTiff3DFile((char *)img_path_temp.str().c_str(),sz[0],sz[1],sz[2],sz[3],datatype_out) != 0)
+                                            {
+                                                cout<<"fail in initTiff3DFile\n";
+                                                return -1;
+                                            }
                                         }
                                         nCopies++;
                                     }// genMetaInfoOnly
@@ -874,13 +891,14 @@ int BigTree::reformat()
                         block.nonZeroBlocks.push_back(blocksaved);
                         block.nBlocksPerDir = block.fileNames.size();
                         layer.blocks.push_back(block);
+                        layer.n_scale = i;
                     }
                     start_height += stacks_V[i][stack_row][0][0];
                 }
             }
 
             //
-            meta.layers.push_back(layer);
+            layers.push_back(layer);
         }
 
         //releasing allocated memory
@@ -890,6 +908,23 @@ int BigTree::reformat()
         auto end = std::chrono::high_resolution_clock::now();
         cout<<"writing sub volume's chunk images takes "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<" ms."<<endl;
     }
+
+    // reconstruct meta info
+    cout<<"******"<<endl;
+    for(int i=0; i<layers.size(); i++)
+    {
+        LAYER layer = layers[i];
+        cout<<"layer "<<i<<": "<<layer.n_scale<<endl;
+
+        for(int j=0; j<layer.blocks.size(); j++)
+        {
+            BLOCK block = layer.blocks[j];
+
+            cout<<"block.fileNames[0] "<<block.fileNames[0]<<" "<<block.fileNames.size()<<endl;
+            cout<<"block.dirName "<<block.dirName<<endl;
+        }
+    }
+    cout<<"******"<<endl;
 
     //
     return 0;
@@ -973,8 +1008,8 @@ int BigTree::index()
 
             fwrite(&(block.height), sizeof(uint32), 1, file);
             fwrite(&(block.width), sizeof(uint32), 1, file);
-            fwrite(&(block.depth), sizeof(uint32), 1, file);
-            fwrite(&N_BLOCKS, sizeof(uint32), 1, file);
+            fwrite(&(block.depth), sizeof(uint32), 1, file); // depth of all blocks
+            fwrite(&N_BLOCKS, sizeof(uint32), 1, file); // ?
             fwrite(&(block.color), sizeof(uint32), 1, file);
             fwrite(&(block.offset_V), sizeof(int), 1, file);
             fwrite(&(block.offset_H), sizeof(int), 1, file);

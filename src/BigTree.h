@@ -5,7 +5,7 @@
 
 #define MAX_IMAGES_STREAM 32
 
-// blocks in each folder
+// folder
 class BLOCK
 {
 public:
@@ -27,10 +27,11 @@ public:
 
     uint32 nBlocksPerDir;
     vector<string> fileNames;
-
-    uint32 height, width, depth, color, bytesPerVoxel;
-
+    vector<uint32> depths;
     vector<bool> nonZeroBlocks;
+
+    uint32 height, width, color;
+    uint32 bytesPerVoxel; // assume bytesPerVoxel is same
 
     bool bWrite;
 };

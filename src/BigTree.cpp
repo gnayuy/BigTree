@@ -937,6 +937,12 @@ int BigTree::index()
     // voxel size 1 micron by default
     // original offsets 0 mm by default
 
+    if(meta.layers.empty())
+    {
+        cout<<"Need meta data for further visualization"<<endl;
+        return -1;
+    }
+
     //
     for(int res_i=0; res_i< resolutions; res_i++)
     {

@@ -1021,14 +1021,16 @@ int BigTree::reformat()
             {
                 BLOCK mblock = mlayer.blocks[k];
 
-                if(mblock.dirName.compare(block.dirName) == 0)
+                //if(mblock.dirName.compare(block.dirName) == 0)
+                if(compareString(mblock.dirName.c_str(), block.dirName.c_str(), mblock.dirName.length()) == 0)
                 {
                     found = true;
 
                     bool added = false;
                     for(int iname=0; iname<mblock.fileNames.size(); iname++)
                     {
-                        if(mblock.fileNames[iname].compare(block.fileNames[0]) == 0)
+                        //if(mblock.fileNames[iname].compare(block.fileNames[0]) == 0)
+                        if(compareString(mblock.fileNames[iname].c_str(), block.fileNames[0].c_str(), mblock.fileNames[iname].length()) == 0)
                         {
                             added = true;
                             continue;

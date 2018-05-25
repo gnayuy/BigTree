@@ -100,3 +100,6 @@ int writeTiff3DFile(char* filename, uint8 *img, int x, int y, int z, int c, int 
 
 //
 int tiffIOTest(char* inputFileName, char *outputFileName, int compressionMethod);
+
+//
+int compareString(const char *ptr0, const char *ptr1, int len);

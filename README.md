@@ -4,14 +4,19 @@ BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is d
 
 More details see our paper "BigTree: high-performance hierarchical tree construction for large image data sets".
 
-## compile with cmake
+## build with cmake
 
 Install [libtiff][] by following the instructions on their website. This is required for read and write images.
 
 We use [cxxopts][] to parse command lines, which requires gcc > 4.9.
 
-In terminal, type commands:
+Get the source code with commands:
 
+    git clone https://github.com/gnayuy/BigTree.git
+    git checkout origin release1.0
+    
+In terminal, type commands:
+    
     % mkdir build
     % cd build
     % ccmake ..

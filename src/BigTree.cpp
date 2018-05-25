@@ -996,7 +996,7 @@ int BigTree::reformat()
     for(int i=0; i<layers.size(); i++)
     {
         LAYER layer = layers[i];
-        //cout<<"layer "<<i<<": "<<layer.n_scale<<endl;
+        cout<<"layer "<<i<<": "<<layer.n_scale<<" of "<<layers.size()<<endl;
 
         //
         if(meta.layers.empty() || meta.layers.size() <= layer.n_scale)
@@ -1007,9 +1007,13 @@ int BigTree::reformat()
 
         LAYER mlayer = meta.layers[layer.n_scale];
 
+        cout<<" ... blocks "<<layer.blocks.size()<<endl;
+
         //
         for(int j=0; j<layer.blocks.size(); j++)
         {
+            //cout<<"block "<<j<<" of "<<layer.blocks.size()<<endl;
+
             BLOCK block = layer.blocks[j];
 
             bool found = false;
@@ -1055,6 +1059,7 @@ int BigTree::reformat()
             //cout<<"block.dirName "<<block.dirName<<endl;
         }
     }
+    cout<<"finisth meta info construction"<<endl;
 
     //
     return 0;

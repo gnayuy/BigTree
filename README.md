@@ -15,7 +15,7 @@ To get the source via the following commands:
     git clone https://github.com/gnayuy/BigTree.git
     git checkout origin release1.0
     
-In terminal, type commands:
+To build the source via the following commands:
     
     % mkdir build
     % cd build

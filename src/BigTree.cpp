@@ -1061,7 +1061,7 @@ int BigTree::reformat()
             //cout<<"block.dirName "<<block.dirName<<endl;
         }
     }
-    cout<<"finisth meta info construction"<<endl;
+    cout<<"finish meta info construction"<<endl;
 
     //
     return 0;

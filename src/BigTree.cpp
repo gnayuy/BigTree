@@ -451,13 +451,17 @@ int BigTree::reformat()
     int slice_start[TMITREE_MAX_HEIGHT];
     int slice_end[TMITREE_MAX_HEIGHT];
 
+    int nzsize[TMITREE_MAX_HEIGHT];
+
     for(int res_i=0; res_i< resolutions; res_i++)
     {
         stack_block[res_i] = 0;
         slice_start[res_i] = 0;
         slice_end[res_i] = slice_start[res_i] + stacks_D[res_i][0][0][0] - 1;
 
-        cout<<"slice_end["<<res_i<<"] "<<slice_end[res_i]<<endl;
+        //cout<<"slice_end["<<res_i<<"] "<<slice_end[res_i]<<endl;
+
+        nzsize[res_i] = 0;
     }
 
     //
@@ -576,6 +580,19 @@ int BigTree::reformat()
                 base_path << filePaths[i] << "/";
 
                 //cout<<"base_path "<<base_path.str()<<endl;
+
+                // meta info for index()
+                bool addMeta = false;
+
+                if(z == 0)
+                {
+                    addMeta = true;
+                }
+                else if( (int)(slice_start[i] / stacks_D[i][0][0][stack_block[i]]) > nzsize[i])
+                {
+                    nzsize[i]++;
+                    addMeta = true;
+                }
 
                 //looping on new stacks
                 for(int stack_row = 0, start_height = 0, end_height = 0; stack_row < n_stacks_V[i]; stack_row++)
@@ -750,17 +767,20 @@ int BigTree::reformat()
                         // meta info for index()
                         BLOCK block;
 
-                        block.width = sz[0];
-                        block.height = sz[1];
-                        block.depths.push_back(sz[2]);
-                        block.color = sz[3];
-                        block.bytesPerVoxel = datatype_out;
+                        if(addMeta)
+                        {
+                            block.width = sz[0];
+                            block.height = sz[1];
+                            block.depths.push_back(sz[2]);
+                            block.color = sz[3];
+                            block.bytesPerVoxel = datatype_out;
 
-                        block.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
-                        block.offset_H = start_width;
-                        block.offset_V = start_height;
-                        block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
-                        block.offsets_D.push_back(slice_start[i]);
+                            block.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
+                            block.offset_H = start_width;
+                            block.offset_V = start_height;
+                            block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
+                            block.offsets_D.push_back(slice_start[i]);
+                        }
 
                         bool blocksaved = false;
 
@@ -971,17 +991,24 @@ int BigTree::reformat()
                         start_width  += stacks_H[i][stack_row][stack_column][0];
 
                         //
-                        block.nonZeroBlocks.push_back(blocksaved);
-                        block.nBlocksPerDir = block.fileNames.size();
-                        layer.blocks.push_back(block);
-                        layer.n_scale = i;
+                        if(addMeta)
+                        {
+                            block.nonZeroBlocks.push_back(blocksaved);
+                            block.nBlocksPerDir = block.fileNames.size();
+                            layer.blocks.push_back(block);
+                            layer.n_scale = i;
+                        }
+
                     }
                     start_height += stacks_V[i][stack_row][0][0];
                 }
             }
 
             //
-            layers.push_back(layer);
+            if(!layer.blocks.empty())
+            {
+                layers.push_back(layer);
+            }
         }
 
         //releasing allocated memory

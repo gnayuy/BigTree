@@ -69,6 +69,9 @@ char *copyFile(const char *srcFile, const char *dstFile);
 void halveSample(uint8* img, int height, int width, int depth, int method, int bytes_chan);
 
 //
+void halveSample2D(uint8* img, int height, int width, int depth, int method, int bytes_chan);
+
+//
 void copydata(unsigned char *psrc, uint32 stride_src, unsigned char *pdst, uint32 stride_dst, uint32 width, uint32 len);
 
 //
@@ -91,6 +94,9 @@ int openTiff3DFile(char *filename, char *mode, void *&fhandle, bool reopen);
 
 //
 char *appendSlice2Tiff3DFile(void *fhandler, int slice, unsigned char *img, unsigned int  img_width, unsigned int  img_height, int spp, int bpp, int NPages);
+
+//
+int writeTiff3DFile(char* filename, uint8 *img, int x, int y, int z, int c, int datatype);
 
 //
 int tiffIOTest(char* inputFileName, char *outputFileName, int compressionMethod);

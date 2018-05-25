@@ -277,6 +277,8 @@ int BigTree::init()
         n_stacks_H[res_i] = (int) ceil ( (width/pow(2,res_i))  / (float) block_width  );
         n_stacks_D[res_i] = (int) ceil ( (depth/pow(2,halve_pow2[res_i]))  / (float) block_depth  );
 
+        //cout<<"n_stacks_D["<<res_i<<"] "<<n_stacks_D[res_i]<<endl;
+
         try
         {
             stacks_V[res_i] = new uint32 **[n_stacks_V[res_i]];
@@ -454,6 +456,8 @@ int BigTree::reformat()
         stack_block[res_i] = 0;
         slice_start[res_i] = 0;
         slice_end[res_i] = slice_start[res_i] + stacks_D[res_i][0][0][0] - 1;
+
+        cout<<"slice_end["<<res_i<<"] "<<slice_end[res_i]<<endl;
     }
 
     //
@@ -472,7 +476,7 @@ int BigTree::reformat()
             //
             if(datatype>1 && nbits)
             {
-                long totalvoxels = (height * width * ((z_parts<=z_ratio) ? z_max_res : (depth%z_max_res)))*color;
+                long totalvoxels = (height * width * ((z_ratio>0) ? z_max_res : (depth%z_max_res)))*color;
                 if ( datatype == 2 )
                 {
                     #pragma omp parallel
@@ -516,7 +520,7 @@ int BigTree::reformat()
             if ( (z / pow(2,halve_pow2[i])) > slice_end[i] ) {
                 stack_block[i]++;
                 slice_start[i] = slice_end[i] + 1;
-                slice_end[i] += stacks_D[i][0][0][stack_block[i]];
+                slice_end[i] += stacks_D[i][0][0][stack_block[i]];  
             }
 
             // find abs_pos_z at resolution i
@@ -530,7 +534,9 @@ int BigTree::reformat()
             long n_slices_pred  = (z_parts - 1) * z_max_res / pow(2,halve_pow2[i]);
 
             // buffer size along D is different when the remainder of the subdivision by z_max_res is considered
-            long z_size = (z_parts<=z_ratio) ? z_max_res : (depth%z_max_res);
+            long z_size = (z_ratio>0) ? z_max_res : (depth%z_max_res);
+
+            cout<<"z_parts "<<z_parts<<" z_ratio "<<z_ratio<<" z_max_res "<<z_max_res<<" depth "<<depth<<endl;
 
             //halvesampling resolution if current resolution is not the deepest one
             if(i!=0)
@@ -539,13 +545,20 @@ int BigTree::reformat()
                 {
                     if ( halve_pow2[i] == (halve_pow2[i-1]+1) )
                     {
+                        //cout<<"3D downsampling \n";
+
                         // 3D
                         halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
+
+                        // debug
+                        // writeTiff3DFile("test.tif", ubuffer, (int)width/(pow(2,i)), (int)height/(pow(2,i)), (int)z_size/(pow(2,halve_pow2[i])), 1, datatype);
                     }
                     else if ( halve_pow2[i] == halve_pow2[i-1] )
                     {
+                        //cout<<"2D downsampling \n";
+
                         // 2D
-                        halveSample(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
+                        halveSample2D(ubuffer,(int)height/(pow(2,i-1)),(int)width/(pow(2,i-1)),(int)z_size/(pow(2,halve_pow2[i-1])),HALVE_BY_MAX,datatype);
                     }
                     else
                     {
@@ -630,13 +643,14 @@ int BigTree::reformat()
                                 int slice_start_temp = 0;
                                 for ( int j=0; j < n_stacks_D[i]; j++ )
                                 {
-
                                     bool copying = false;
 
                                     if(sz[2] == stacks_D[i][stack_row][stack_column][j])
                                         copying = true;
 
                                     sz[2] = stacks_D[i][stack_row][stack_column][j];
+
+                                    //cout<<" ... "<<j<<" sz[2] "<<sz[2]<<" slice_end "<<slice_end[i]<<endl;
 
                                     std::stringstream abs_pos_z_temp;
                                     abs_pos_z_temp.width(6);
@@ -696,7 +710,7 @@ int BigTree::reformat()
                         std::stringstream img_path;
                         img_path << partial_img_path.str() << abs_pos_z.str() << ".tif";
 
-                        //cout<<"img_path "<<img_path.str()<<endl;
+                        cout<<"img_path "<<img_path.str()<<endl;
 
                         //
                         void *fhandle = 0;
@@ -755,11 +769,15 @@ int BigTree::reformat()
                         // WARNING: assumes that block size along z is not less that z_size/(powInt(2,i))
                         for(int buffer_z=0; buffer_z<z_size/(pow(2,halve_pow2[i])); buffer_z++, slice_ind++)
                         {
-                            //cout<<"buffer_z "<<buffer_z<<endl;
+                            cout<<"buffer_z "<<buffer_z<<" slice_ind "<<slice_ind<<" z "<<z<<" z_size/(pow(2,halve_pow2[i]) "<<z_size/(pow(2,halve_pow2[i]))<<" z_size "<<z_size<<endl;
 
-                            // D0 must be subtracted because z is an absolute index in volume while slice index should be computed on a relative basis (i.e. starting form 0)
+                            cout<<"(z / pow(2,halve_pow2[i]) + buffer_z) "<<z / pow(2,halve_pow2[i]) + buffer_z<<" slice_end["<<i<<"] "<<slice_end[i]<<endl;
+
+                            // z is an absolute index in volume while slice index should be computed on a relative basis
                             if ( (z / pow(2,halve_pow2[i]) + buffer_z) > slice_end[i] && !block_changed)
                             {
+                                cout<<"block changed "<<slice_end[i]<<endl;
+
                                 // start a new block along z
                                 std::stringstream abs_pos_z_next;
                                 abs_pos_z_next.width(6);
@@ -768,7 +786,7 @@ int BigTree::reformat()
                                 img_path.str("");
                                 img_path << partial_img_path.str() << abs_pos_z_next.str() << ".tif";
 
-                                //cout<<"img_path "<<img_path.str()<<endl;
+                                cout<<"... img_path "<<img_path.str()<<endl;
 
                                 slice_ind = 0;
 
@@ -820,7 +838,7 @@ int BigTree::reformat()
                                 if(datatype == 2)
                                 {
                                     // 16-bit input
-                                    long offset = buffer_z*(height/pow(2,i))*(width/pow(2,i));
+                                    long offset = buffer_z*(long)(height/pow(2,i))*(long)(width/pow(2,i));
                                     uint16 *raw_ch16 = (uint16 *) ubuffer + offset;
 
                                     //cout<<"pointer p: "<<static_cast<void*>(p)<<endl;
@@ -832,11 +850,11 @@ int BigTree::reformat()
 
                                         //
                                         #pragma omp parallel for collapse(2)
-                                        for(long i=0; i<sz[1]; i++)
+                                        for(long y=0; y<sz[1]; y++)
                                         {
-                                            for(long j=0; j<sz[0]; j++)
+                                            for(long x=0; x<sz[0]; x++)
                                             {
-                                                p[i*sz[0]+j] = raw_ch16[(i+start_height)*(raw_img_width) + (j+start_width)];
+                                                p[y*sz[0]+x] = raw_ch16[(y+start_height)*(raw_img_width) + (x+start_width)];
                                             }
                                         }
 
@@ -845,9 +863,9 @@ int BigTree::reformat()
                                         int saveVoxelThresh = 1;
 
                                         #pragma omp parallel for reduction(+:numNonZeros)
-                                        for(int i=0; i<szChunk; i++)
+                                        for(int x=0; x<szChunk; x++)
                                         {
-                                            if(p[i]>0)
+                                            if(p[x]>0)
                                                 numNonZeros++;
                                         }
 
@@ -870,7 +888,7 @@ int BigTree::reformat()
                                 else if(datatype == 1)
                                 {
                                     // 8-bit input
-                                    long offset = buffer_z*(height/pow(2,i))*(width/pow(2,i));
+                                    long offset = buffer_z*(long)(height/pow(2,i))*(long)(width/pow(2,i));
                                     uint8 *raw_ch8 = (uint8 *) ubuffer + offset;
 
                                     if(datatype_out == 1)
@@ -879,11 +897,11 @@ int BigTree::reformat()
 
                                         //
                                         #pragma omp parallel for collapse(2)
-                                        for(long i=0; i<sz[1]; i++)
+                                        for(long y=0; y<sz[1]; y++)
                                         {
-                                            for(long j=0; j<sz[0]; j++)
+                                            for(long x=0; x<sz[0]; x++)
                                             {
-                                                p[i*sz[0]+j] = raw_ch8[(i+start_height)*(raw_img_width) + (j+start_width)];
+                                                p[y*sz[0]+x] = raw_ch8[(y+start_height)*(raw_img_width) + (x+start_width)];
                                             }
                                         }
 
@@ -892,11 +910,13 @@ int BigTree::reformat()
                                         int saveVoxelThresh = 1;
 
                                         #pragma omp parallel for reduction(+:numNonZeros)
-                                        for(int i=0; i<szChunk; i++)
+                                        for(int x=0; x<szChunk; x++)
                                         {
-                                            if(p[i]>0)
+                                            if(p[x]>0)
                                                 numNonZeros++;
                                         }
+
+                                        cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
 
                                         if(numNonZeros>saveVoxelThresh)
                                         {
@@ -904,6 +924,7 @@ int BigTree::reformat()
                                             if(temp_n_chans==2)
                                                 temp_n_chans++;
 
+                                            cout<<"... save slice_ind: "<<slice_ind<<endl;
                                             appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
                                             blocksaved = true;
                                         }
@@ -1072,26 +1093,26 @@ int BigTree::index()
         fwrite(&(layer.rows), sizeof(uint16), 1, file);
         fwrite(&(layer.cols), sizeof(uint16), 1, file);
 
-        cout<<"filename "<<filename<<endl;
+//        cout<<"filename "<<filename<<endl;
 
-        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
-        cout<<"meta.reference_V "<<meta.reference_V<<endl;
-        cout<<"meta.reference_H "<<meta.reference_H<<endl;
-        cout<<"meta.reference_D "<<meta.reference_D<<endl;
-        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-        cout<<"meta.org_V "<<meta.org_V<<endl;
-        cout<<"meta.org_H "<<meta.org_H<<endl;
-        cout<<"meta.org_D "<<meta.org_D<<endl;
-        cout<<"layer.dim_V "<<layer.dim_V<<endl;
-        cout<<"layer.dim_H "<<layer.dim_H<<endl;
-        cout<<"layer.dim_D "<<layer.dim_D<<endl;
-        cout<<"layer.rows "<<layer.rows<<endl;
-        cout<<"layer.cols "<<layer.cols<<endl;
+//        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
+//        cout<<"meta.reference_V "<<meta.reference_V<<endl;
+//        cout<<"meta.reference_H "<<meta.reference_H<<endl;
+//        cout<<"meta.reference_D "<<meta.reference_D<<endl;
+//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+//        cout<<"meta.org_V "<<meta.org_V<<endl;
+//        cout<<"meta.org_H "<<meta.org_H<<endl;
+//        cout<<"meta.org_D "<<meta.org_D<<endl;
+//        cout<<"layer.dim_V "<<layer.dim_V<<endl;
+//        cout<<"layer.dim_H "<<layer.dim_H<<endl;
+//        cout<<"layer.dim_D "<<layer.dim_D<<endl;
+//        cout<<"layer.rows "<<layer.rows<<endl;
+//        cout<<"layer.cols "<<layer.cols<<endl;
 
         int n = layer.blocks.size(); // rows * cols
 
@@ -1125,16 +1146,16 @@ int BigTree::index()
             fwrite(const_cast<char *>(block.dirName.c_str()), block.lengthDirName, 1, file);
 
 
-            cout<<"... "<<endl;
-            cout<<"block.height "<<block.height<<endl;
-            cout<<"block.width "<<block.width<<endl;
-            cout<<"depthBlock "<<depthBlock<<endl;
-            cout<<"N_BLOCKS "<<N_BLOCKS<<endl;
-            cout<<"block.color "<<block.color<<endl;
-            cout<<"block.offset_V "<<block.offset_V<<endl;
-            cout<<"block.offset_H "<<block.offset_H<<endl;
-            cout<<"block.lengthDirName "<<block.lengthDirName<<endl;
-            cout<<"block.dirName "<<block.dirName<<endl;
+//            cout<<"... "<<endl;
+//            cout<<"block.height "<<block.height<<endl;
+//            cout<<"block.width "<<block.width<<endl;
+//            cout<<"depthBlock "<<depthBlock<<endl;
+//            cout<<"N_BLOCKS "<<N_BLOCKS<<endl;
+//            cout<<"block.color "<<block.color<<endl;
+//            cout<<"block.offset_V "<<block.offset_V<<endl;
+//            cout<<"block.offset_H "<<block.offset_H<<endl;
+//            cout<<"block.lengthDirName "<<block.lengthDirName<<endl;
+//            cout<<"block.dirName "<<block.dirName<<endl;
 
 
             for(int j=0; j<N_BLOCKS; j++)
@@ -1161,16 +1182,16 @@ int BigTree::index()
                 fwrite(&(block.depths[j]), sizeof(uint32), 1, file);
                 fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
 
-                cout<<"... ..."<<j<<endl;
-                cout<<"block.lengthFileName "<<block.lengthFileName<<endl;
-                cout<<"block.fileNames[j] "<<block.fileNames[j]<<endl;
-                cout<<"block.depths[j] "<<block.depths[j]<<endl;
-                cout<<"block.offsets_D[j] "<<block.offsets_D[j]<<endl;
+//                cout<<"... ..."<<j<<endl;
+//                cout<<"block.lengthFileName "<<block.lengthFileName<<endl;
+//                cout<<"block.fileNames[j] "<<block.fileNames[j]<<endl;
+//                cout<<"block.depths[j] "<<block.depths[j]<<endl;
+//                cout<<"block.offsets_D[j] "<<block.offsets_D[j]<<endl;
 
             }
             fwrite(&(block.bytesPerVoxel), sizeof(uint32), 1, file);
 
-            cout<<"block.bytesPerVoxel "<<block.bytesPerVoxel<<endl;
+//            cout<<"block.bytesPerVoxel "<<block.bytesPerVoxel<<endl;
         }
         fclose(file);
     }

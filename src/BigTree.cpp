@@ -95,7 +95,6 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     srcdir.assign(inputdir);
     dstdir.assign(outputdir);
 
-
     //
     if(init())
     {
@@ -1032,8 +1031,6 @@ int BigTree::index()
     //
     for(int res_i=0; res_i< resolutions; res_i++)
     {
-        cout<<"res_i "<<res_i<<endl;
-
         //
         string filename = filePaths[res_i] + "/mdata.bin";
 
@@ -1083,7 +1080,6 @@ int BigTree::index()
             {
                 depthBlock += block.depths[k];
             }
-
 
             fwrite(&(block.height), sizeof(uint32), 1, file);
             fwrite(&(block.width), sizeof(uint32), 1, file);

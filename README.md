@@ -13,7 +13,7 @@ We use [cxxopts][] to parse command lines, which requires gcc > 4.9.
 To get the source via the following commands:
 
     git clone https://github.com/gnayuy/BigTree.git
-    git checkout origin release1.0
+    git checkout release1.0
     
 To build the source via the following commands:
     

@@ -864,27 +864,6 @@ int BigTree::reformat()
 
                                         appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
                                         blocksaved = true;
-
-                                        //
-//                                        int numNonZeros = 0;
-//                                        int saveVoxelThresh = 1;
-
-//                                        #pragma omp parallel for reduction(+:numNonZeros)
-//                                        for(int x=0; x<szChunk; x++)
-//                                        {
-//                                            if(p[x]>0)
-//                                                numNonZeros++;
-//                                        }
-
-//                                        if(numNonZeros>saveVoxelThresh)
-//                                        {
-//                                            int temp_n_chans = color;
-//                                            if(temp_n_chans==2)
-//                                                temp_n_chans++;
-
-//                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
-//                                            blocksaved = true;
-//                                        }
                                     }
                                     else
                                     {
@@ -920,29 +899,6 @@ int BigTree::reformat()
                                         appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
                                         blocksaved = true;
 
-                                        //
-//                                        int numNonZeros = 0;
-//                                        int saveVoxelThresh = 1;
-
-//                                        #pragma omp parallel for reduction(+:numNonZeros)
-//                                        for(int x=0; x<szChunk; x++)
-//                                        {
-//                                            if(p[x]>0)
-//                                                numNonZeros++;
-//                                        }
-
-//                                        //cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
-
-//                                        if(numNonZeros>saveVoxelThresh)
-//                                        {
-//                                            int temp_n_chans = color;
-//                                            if(temp_n_chans==2)
-//                                                temp_n_chans++;
-
-//                                            //cout<<"... save slice_ind: "<<slice_ind<<endl;
-//                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
-//                                            blocksaved = true;
-//                                        }
                                     }
                                     else
                                     {
@@ -1108,27 +1064,6 @@ int BigTree::index()
         fwrite(&(layer.rows), sizeof(uint16), 1, file);
         fwrite(&(layer.cols), sizeof(uint16), 1, file);
 
-//        cout<<"filename "<<filename<<endl;
-
-//        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
-//        cout<<"meta.reference_V "<<meta.reference_V<<endl;
-//        cout<<"meta.reference_H "<<meta.reference_H<<endl;
-//        cout<<"meta.reference_D "<<meta.reference_D<<endl;
-//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-//        cout<<"meta.org_V "<<meta.org_V<<endl;
-//        cout<<"meta.org_H "<<meta.org_H<<endl;
-//        cout<<"meta.org_D "<<meta.org_D<<endl;
-//        cout<<"layer.dim_V "<<layer.dim_V<<endl;
-//        cout<<"layer.dim_H "<<layer.dim_H<<endl;
-//        cout<<"layer.dim_D "<<layer.dim_D<<endl;
-//        cout<<"layer.rows "<<layer.rows<<endl;
-//        cout<<"layer.cols "<<layer.cols<<endl;
-
         int n = layer.blocks.size(); // rows * cols
 
         for(int i=0; i<n; i++)
@@ -1160,52 +1095,15 @@ int BigTree::index()
             fwrite(&(block.lengthDirName), sizeof(uint16), 1, file);
             fwrite(const_cast<char *>(block.dirName.c_str()), block.lengthDirName, 1, file);
 
-//            cout<<"... "<<endl;
-//            cout<<"block.height "<<block.height<<endl;
-//            cout<<"block.width "<<block.width<<endl;
-//            cout<<"depthBlock "<<depthBlock<<endl;
-//            cout<<"N_BLOCKS "<<N_BLOCKS<<endl;
-//            cout<<"block.color "<<block.color<<endl;
-//            cout<<"block.offset_V "<<block.offset_V<<endl;
-//            cout<<"block.offset_H "<<block.offset_H<<endl;
-//            cout<<"block.lengthDirName "<<block.lengthDirName<<endl;
-//            cout<<"block.dirName "<<block.dirName<<endl;
-
-
             for(int j=0; j<N_BLOCKS; j++)
             {
-//                if(block.nonZeroBlocks[j]==false && !genMetaInfoOnly)
-//                {
-//                    if( remove( block.fileNames[j].c_str() ) != 0 )
-//                    {
-//                        cout<<"Error deleting file "<<block.fileNames[j]<<endl;
-//                        return -1;
-//                    }
-//                }
-//                else
-//                {
-//                    fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
-//                    fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
-//                    fwrite(&(block.depth), sizeof(uint32), 1, file);
-//                    fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
-//                }
-
                 //
                 fwrite(&(block.lengthFileName), sizeof(uint16), 1, file);
                 fwrite(const_cast<char *>(block.fileNames[j].c_str()), block.lengthFileName, 1, file);
                 fwrite(&(block.depths[j]), sizeof(uint32), 1, file);
                 fwrite(&(block.offsets_D[j]), sizeof(int), 1, file);
-
-//                cout<<"... ..."<<j<<endl;
-//                cout<<"block.lengthFileName "<<block.lengthFileName<<endl;
-//                cout<<"block.fileNames[j] "<<block.fileNames[j]<<endl;
-//                cout<<"block.depths[j] "<<block.depths[j]<<endl;
-//                cout<<"block.offsets_D[j] "<<block.offsets_D[j]<<endl;
-
             }
             fwrite(&(block.bytesPerVoxel), sizeof(uint32), 1, file);
-
-//            cout<<"block.bytesPerVoxel "<<block.bytesPerVoxel<<endl;
         }
         fclose(file);
     }

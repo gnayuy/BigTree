@@ -536,7 +536,7 @@ int BigTree::reformat()
             // buffer size along D is different when the remainder of the subdivision by z_max_res is considered
             long z_size = (z_ratio>0) ? z_max_res : (depth%z_max_res);
 
-            cout<<"z_parts "<<z_parts<<" z_ratio "<<z_ratio<<" z_max_res "<<z_max_res<<" depth "<<depth<<endl;
+            //cout<<"z_parts "<<z_parts<<" z_ratio "<<z_ratio<<" z_max_res "<<z_max_res<<" depth "<<depth<<endl;
 
             //halvesampling resolution if current resolution is not the deepest one
             if(i!=0)
@@ -710,7 +710,7 @@ int BigTree::reformat()
                         std::stringstream img_path;
                         img_path << partial_img_path.str() << abs_pos_z.str() << ".tif";
 
-                        cout<<"img_path "<<img_path.str()<<endl;
+                        //cout<<"img_path "<<img_path.str()<<endl;
 
                         //
                         void *fhandle = 0;
@@ -767,16 +767,15 @@ int BigTree::reformat()
                         //cout<<"z "<<z<<endl;
 
                         // WARNING: assumes that block size along z is not less that z_size/(powInt(2,i))
-                        for(int buffer_z=0; buffer_z<z_size/(pow(2,halve_pow2[i])); buffer_z++, slice_ind++)
+                        for(int buffer_z=0; buffer_z<(int)(z_size/(pow(2,halve_pow2[i]))); buffer_z++, slice_ind++)
                         {
-                            cout<<"buffer_z "<<buffer_z<<" slice_ind "<<slice_ind<<" z "<<z<<" z_size/(pow(2,halve_pow2[i]) "<<z_size/(pow(2,halve_pow2[i]))<<" z_size "<<z_size<<endl;
-
-                            cout<<"(z / pow(2,halve_pow2[i]) + buffer_z) "<<z / pow(2,halve_pow2[i]) + buffer_z<<" slice_end["<<i<<"] "<<slice_end[i]<<endl;
+                            //cout<<"buffer_z "<<buffer_z<<" slice_ind "<<slice_ind<<" z "<<z<<" z_size/(pow(2,halve_pow2[i]) "<<z_size/(pow(2,halve_pow2[i]))<<" z_size "<<z_size<<endl;
+                            //cout<<"(z / pow(2,halve_pow2[i]) + buffer_z) "<<z / pow(2,halve_pow2[i]) + buffer_z<<" slice_end["<<i<<"] "<<slice_end[i]<<endl;
 
                             // z is an absolute index in volume while slice index should be computed on a relative basis
-                            if ( (z / pow(2,halve_pow2[i]) + buffer_z) > slice_end[i] && !block_changed)
+                            if ( (int)(z / pow(2,halve_pow2[i]) + buffer_z) > slice_end[i] && !block_changed)
                             {
-                                cout<<"block changed "<<slice_end[i]<<endl;
+                                //cout<<"block changed "<<slice_end[i]<<endl;
 
                                 // start a new block along z
                                 std::stringstream abs_pos_z_next;
@@ -786,7 +785,7 @@ int BigTree::reformat()
                                 img_path.str("");
                                 img_path << partial_img_path.str() << abs_pos_z_next.str() << ".tif";
 
-                                cout<<"... img_path "<<img_path.str()<<endl;
+                                //cout<<"... img_path "<<img_path.str()<<endl;
 
                                 slice_ind = 0;
 
@@ -916,7 +915,7 @@ int BigTree::reformat()
                                                 numNonZeros++;
                                         }
 
-                                        cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
+                                        //cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
 
                                         if(numNonZeros>saveVoxelThresh)
                                         {
@@ -924,7 +923,7 @@ int BigTree::reformat()
                                             if(temp_n_chans==2)
                                                 temp_n_chans++;
 
-                                            cout<<"... save slice_ind: "<<slice_ind<<endl;
+                                            //cout<<"... save slice_ind: "<<slice_ind<<endl;
                                             appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
                                             blocksaved = true;
                                         }

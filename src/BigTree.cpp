@@ -73,7 +73,7 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     // default parameters settings
     block_width = 256;
     block_height = 256;
-    block_depth = 32;
+    block_depth = 256;
 
     nbits = 4;
 

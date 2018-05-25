@@ -760,7 +760,7 @@ int BigTree::reformat()
                         block.offset_H = start_width;
                         block.offset_V = start_height;
                         block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
-                        block.offsets_D.push_back(z);
+                        block.offsets_D.push_back(slice_start[i]);
 
                         bool blocksaved = false;
 
@@ -857,26 +857,34 @@ int BigTree::reformat()
                                             }
                                         }
 
+                                        // temporary save all the way (version 1.01 5/25/2018)
+                                        int temp_n_chans = color;
+                                        if(temp_n_chans==2)
+                                            temp_n_chans++;
+
+                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+                                        blocksaved = true;
+
                                         //
-                                        int numNonZeros = 0;
-                                        int saveVoxelThresh = 1;
+//                                        int numNonZeros = 0;
+//                                        int saveVoxelThresh = 1;
 
-                                        #pragma omp parallel for reduction(+:numNonZeros)
-                                        for(int x=0; x<szChunk; x++)
-                                        {
-                                            if(p[x]>0)
-                                                numNonZeros++;
-                                        }
+//                                        #pragma omp parallel for reduction(+:numNonZeros)
+//                                        for(int x=0; x<szChunk; x++)
+//                                        {
+//                                            if(p[x]>0)
+//                                                numNonZeros++;
+//                                        }
 
-                                        if(numNonZeros>saveVoxelThresh)
-                                        {
-                                            int temp_n_chans = color;
-                                            if(temp_n_chans==2)
-                                                temp_n_chans++;
+//                                        if(numNonZeros>saveVoxelThresh)
+//                                        {
+//                                            int temp_n_chans = color;
+//                                            if(temp_n_chans==2)
+//                                                temp_n_chans++;
 
-                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
-                                            blocksaved = true;
-                                        }
+//                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+//                                            blocksaved = true;
+//                                        }
                                     }
                                     else
                                     {
@@ -904,29 +912,37 @@ int BigTree::reformat()
                                             }
                                         }
 
+                                        // temporary save all the way (version 1.01 5/25/2018)
+                                        int temp_n_chans = color;
+                                        if(temp_n_chans==2)
+                                            temp_n_chans++;
+
+                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+                                        blocksaved = true;
+
                                         //
-                                        int numNonZeros = 0;
-                                        int saveVoxelThresh = 1;
+//                                        int numNonZeros = 0;
+//                                        int saveVoxelThresh = 1;
 
-                                        #pragma omp parallel for reduction(+:numNonZeros)
-                                        for(int x=0; x<szChunk; x++)
-                                        {
-                                            if(p[x]>0)
-                                                numNonZeros++;
-                                        }
+//                                        #pragma omp parallel for reduction(+:numNonZeros)
+//                                        for(int x=0; x<szChunk; x++)
+//                                        {
+//                                            if(p[x]>0)
+//                                                numNonZeros++;
+//                                        }
 
-                                        //cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
+//                                        //cout<<"... raw_img_width "<<raw_img_width<<" offset "<<offset<<" height/pow(2,i) "<<height/pow(2,i)<<" width/pow(2,i) "<<width/pow(2,i)<<endl;
 
-                                        if(numNonZeros>saveVoxelThresh)
-                                        {
-                                            int temp_n_chans = color;
-                                            if(temp_n_chans==2)
-                                                temp_n_chans++;
+//                                        if(numNonZeros>saveVoxelThresh)
+//                                        {
+//                                            int temp_n_chans = color;
+//                                            if(temp_n_chans==2)
+//                                                temp_n_chans++;
 
-                                            //cout<<"... save slice_ind: "<<slice_ind<<endl;
-                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
-                                            blocksaved = true;
-                                        }
+//                                            //cout<<"... save slice_ind: "<<slice_ind<<endl;
+//                                            appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+//                                            blocksaved = true;
+//                                        }
                                     }
                                     else
                                     {
@@ -1143,7 +1159,6 @@ int BigTree::index()
             fwrite(&(block.offset_H), sizeof(int), 1, file);
             fwrite(&(block.lengthDirName), sizeof(uint16), 1, file);
             fwrite(const_cast<char *>(block.dirName.c_str()), block.lengthDirName, 1, file);
-
 
 //            cout<<"... "<<endl;
 //            cout<<"block.height "<<block.height<<endl;

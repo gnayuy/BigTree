@@ -10,7 +10,7 @@ Install [libtiff][] by following the instructions on their website. This is requ
 
 We use [cxxopts][] to parse command lines, which requires gcc > 4.9.
 
-Get the source code with commands:
+To get the source via the following commands:
 
     git clone https://github.com/gnayuy/BigTree.git
     git checkout origin release1.0

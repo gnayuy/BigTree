@@ -17,6 +17,8 @@
 #include <cstring>
 #include <math.h>
 #include <chrono>
+#include <map>
+#include <iterator>
 
 #include <omp.h>
 

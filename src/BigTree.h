@@ -5,6 +5,59 @@
 
 #define MAX_IMAGES_STREAM 32
 
+// meta
+// Folder: Y/Y_X
+// File: Y_X_Z.tif
+
+// block
+class Cube
+{
+public:
+    Cube();
+    ~Cube();
+
+public:
+    int offset_D;
+
+    string fileName;
+    uint32 depth;
+};
+
+// folder
+class YXFolder
+{
+public:
+    YXFolder();
+    ~YXFolder();
+
+public:
+    int offset_V;
+    int offset_H;
+
+    uint16 lengthFileName; // 25 len("000000/000000_000000.tif") + 1
+    uint16 lengthDirName; // 21 len("000000_000000_000000") + 1
+
+    string dirName;
+
+    uint32 height, width, color;
+    uint32 bytesPerVoxel;
+};
+
+// layer
+class Scale
+{
+public:
+    Scale();
+    ~Scale();
+
+public:
+    map<string, YXFolder> layer;
+
+    uint16 rows, cols;
+    float vs_x, vs_y, vs_z; // voxel sizes
+    uint32 dim_V, dim_H, dim_D;
+};
+
 // folder
 class BLOCK
 {
@@ -36,6 +89,7 @@ public:
     bool bWrite;
 };
 
+// resolution
 class LAYER
 {
 public:
@@ -49,6 +103,8 @@ public:
 
     vector<BLOCK> blocks;
     uint32 n_scale;
+
+
 };
 
 // blocks in each resolution
@@ -63,6 +119,8 @@ public:
     float org_V, org_H, org_D; // offsets (0, 0, 0)
     axis reference_V, reference_H, reference_D; // vertical, horizonal, depth
     float mdata_version; // 2
+
+    map<int, Scale> scales;
 };
 
 //

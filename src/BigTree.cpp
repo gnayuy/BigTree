@@ -520,7 +520,7 @@ int BigTree::reformat()
                         #pragma omp for
                         for(long i=0; i<totalvoxels; i++ )
                         {
-                            ptr[i] = ptr[i] >> nbits << 1;
+                            ptr[i] = ptr[i] >> nbits << nbits; // 16-bit
                         }
                     }
                 }
@@ -652,7 +652,7 @@ int BigTree::reformat()
                     }
 
                     int sz[4];
-                    int datatype_out = 1;
+                    int datatype_out = 2; // changed to 16-bit 6/1/2018 yy
 
                     //
                     for(int stack_column = 0, start_width=0, end_width=0; stack_column < n_stacks_H[i]; stack_column++)
@@ -941,7 +941,28 @@ int BigTree::reformat()
                                     {
                                         // 16-bit output
 
+                                        uint16 *out_ch16 = (uint16 *) p;
+
+                                        //
+                                        #pragma omp parallel for collapse(2)
+                                        for(long y=0; y<sz[1]; y++)
+                                        {
+                                            for(long x=0; x<sz[0]; x++)
+                                            {
+                                                out_ch16[y*sz[0]+x] = raw_ch16[(y+start_height)*(raw_img_width) + (x+start_width)];
+                                            }
+                                        }
+
+                                        // temporary save all the way (version 1.01 5/25/2018)
+                                        int temp_n_chans = color;
+                                        if(temp_n_chans==2)
+                                            temp_n_chans++;
+
+                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)out_ch16,sz[0],sz[1],temp_n_chans,16,sz[2]);
+                                        blocksaved = true;
+
                                     }
+
                                 }
                                 else if(datatype == 1)
                                 {

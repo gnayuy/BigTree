@@ -3,7 +3,7 @@
 
 #include "Image.h"
 
-#define MAX_IMAGES_STREAM 32
+#define MAX_IMAGES_STREAM 16
 
 // meta
 // Folder: Y/Y_X

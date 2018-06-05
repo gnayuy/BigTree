@@ -51,6 +51,26 @@ char *copyFile(const char *srcFile, const char *dstFile)
 }
 
 //
+float fastmax(const std::vector<float>& v)
+{
+    float shared_max;
+#pragma omp parallel
+    {
+        float max = std::numeric_limits<float>::max();
+#pragma omp for nowait
+        for(size_t ii=0; ii<v.size(); ++ii)
+        {
+            max = std::max(v[ii], max);
+        }
+#pragma omp critical
+        {
+            shared_max = std::min(shared_max, max);
+        }
+    }
+    return shared_max;
+}
+
+//
 void halveSample(uint8* img, int height, int width, int depth, int method, int bytes_chan)
 {
     float A,B,C,D,E,F,G,H;
@@ -90,6 +110,7 @@ void halveSample(uint8* img, int height, int width, int depth, int method, int b
         }
         else if ( method == HALVE_BY_MAX )
         {
+            #pragma omp parallel for collapse(3)
             for(long z=0; z<d; z++)
             {
                 for(long i=0; i<h; i++)
@@ -112,12 +133,44 @@ void halveSample(uint8* img, int height, int width, int depth, int method, int b
                         if ( B > A ) A = B;
                         B = img[(2*z+1)*width*height + (2*i+1)*width + (2*j+1)];
                         if ( B > A ) A = B;
-
                         //computing max
                         img[z*w*h + i*w + j] = (uint8) round(A);
                     }
                 }
             }
+
+
+            // fast max downsampling
+//            for(long z=0; z<d; z++)
+//            {
+//                long ofz1 = 2*z*width*height;
+//                long ofz2 = (2*z+1)*width*height;
+//                for(long i=0; i<h; i++)
+//                {
+//                    long ofy1 = ofz1 + 2*i*width;
+//                    long ofy2 = ofz1 + (2*i+1)*width;
+//                    long ofy3 = ofz2 + 2*i*width;
+//                    long ofy4 = ofz2 + (2*i+1)*width;
+
+//                    vector<float> v;
+//                    v.clear();
+//                    for(long j=0; j<w; j++)
+//                    {
+//                        // computing max of 8-neighbours
+//                        v.push_back(img[ofy1 + 2*j]);
+//                        v.push_back(img[ofy1 + 2*j + 1]);
+//                        v.push_back(img[ofy2 + 2*j]);
+//                        v.push_back(img[ofy2 + 2*j + 1]);
+//                        v.push_back(img[ofy3 + 2*j]);
+//                        v.push_back(img[ofy3 + 2*j + 1]);
+//                        v.push_back(img[ofy4 + 2*j]);
+//                        v.push_back(img[ofy4 + 2*j + 1]);
+
+//                        //computing max
+//                        img[z*w*h + i*w + j] = (uint8) round(fastmax(v));
+//                    }
+//                }
+//            }
         }
         else
         {

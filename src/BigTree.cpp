@@ -104,7 +104,7 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     // default parameters settings
     block_width = 256;
     block_height = 256;
-    block_depth = 32;
+    block_depth = 256;
 
     nbits = 4;
 
@@ -142,11 +142,11 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     }
 
     //
-    if(index())
-    {
-        cout<<"fail in index() \n";
-        exit(0);
-    }
+//    if(index())
+//    {
+//        cout<<"fail in index() \n";
+//        exit(0);
+//    }
 }
 
 BigTree::~BigTree()
@@ -520,7 +520,8 @@ int BigTree::reformat()
                         #pragma omp for
                         for(long i=0; i<totalvoxels; i++ )
                         {
-                            ptr[i] = ptr[i] >> nbits << nbits; // 16-bit
+                            // ptr[i] = ptr[i] >> nbits << nbits; // 16-bit
+                            ptr[i] = ptr[i] >> nbits;
                         }
                     }
                 }
@@ -652,7 +653,8 @@ int BigTree::reformat()
                     }
 
                     int sz[4];
-                    int datatype_out = 2; // changed to 16-bit 6/1/2018 yy
+                    // int datatype_out = 2; // changed to 16-bit 6/1/2018 yy
+                    int datatype_out = 1;
 
                     //
                     for(int stack_column = 0, start_width=0, end_width=0; stack_column < n_stacks_H[i]; stack_column++)
@@ -1072,75 +1074,75 @@ int BigTree::reformat()
     }
 
     // reconstruct meta info
-    for(int i=0; i<layers.size(); i++)
-    {
-        LAYER layer = layers[i];
-        cout<<"layer "<<i<<": "<<layer.n_scale<<" of "<<layers.size()<<endl;
+//    for(int i=0; i<layers.size(); i++)
+//    {
+//        LAYER layer = layers[i];
+//        cout<<"layer "<<i<<": "<<layer.n_scale<<" of "<<layers.size()<<endl;
 
-        //
-        if(meta.layers.empty() || meta.layers.size() <= layer.n_scale)
-        {
-            meta.layers.push_back(layer);
-            continue;
-        }
+//        //
+//        if(meta.layers.empty() || meta.layers.size() <= layer.n_scale)
+//        {
+//            meta.layers.push_back(layer);
+//            continue;
+//        }
 
-        LAYER mlayer = meta.layers[layer.n_scale];
+//        LAYER mlayer = meta.layers[layer.n_scale];
 
-        cout<<" ... blocks "<<layer.blocks.size()<<endl;
+//        cout<<" ... blocks "<<layer.blocks.size()<<endl;
 
-        //
-        for(int j=0; j<layer.blocks.size(); j++)
-        {
-            //cout<<"block "<<j<<" of "<<layer.blocks.size()<<endl;
+//        //
+//        for(int j=0; j<layer.blocks.size(); j++)
+//        {
+//            //cout<<"block "<<j<<" of "<<layer.blocks.size()<<endl;
 
-            BLOCK block = layer.blocks[j];
+//            BLOCK block = layer.blocks[j];
 
-            bool found = false;
-            for(int k=0; k<mlayer.blocks.size(); k++)
-            {
-                BLOCK mblock = mlayer.blocks[k];
+//            bool found = false;
+//            for(int k=0; k<mlayer.blocks.size(); k++)
+//            {
+//                BLOCK mblock = mlayer.blocks[k];
 
-                //if(mblock.dirName.compare(block.dirName) == 0)
-                if(compareString(mblock.dirName.c_str(), block.dirName.c_str(), mblock.dirName.length()) == 0)
-                {
-                    found = true;
+//                //if(mblock.dirName.compare(block.dirName) == 0)
+//                if(compareString(mblock.dirName.c_str(), block.dirName.c_str(), mblock.dirName.length()) == 0)
+//                {
+//                    found = true;
 
-                    bool added = false;
-                    for(int iname=0; iname<mblock.fileNames.size(); iname++)
-                    {
-                        //if(mblock.fileNames[iname].compare(block.fileNames[0]) == 0)
-                        if(compareString(mblock.fileNames[iname].c_str(), block.fileNames[0].c_str(), mblock.fileNames[iname].length()) == 0)
-                        {
-                            added = true;
-                            continue;
-                        }
-                    }
+//                    bool added = false;
+//                    for(int iname=0; iname<mblock.fileNames.size(); iname++)
+//                    {
+//                        //if(mblock.fileNames[iname].compare(block.fileNames[0]) == 0)
+//                        if(compareString(mblock.fileNames[iname].c_str(), block.fileNames[0].c_str(), mblock.fileNames[iname].length()) == 0)
+//                        {
+//                            added = true;
+//                            continue;
+//                        }
+//                    }
 
-                    if(!added)
-                    {
-                        meta.layers[layer.n_scale].blocks[k].fileNames.push_back(block.fileNames[0]);
-                        meta.layers[layer.n_scale].blocks[k].depths.push_back(block.depths[0]);
-                        meta.layers[layer.n_scale].blocks[k].offsets_D.push_back(block.offsets_D[0]);
-                    }
+//                    if(!added)
+//                    {
+//                        meta.layers[layer.n_scale].blocks[k].fileNames.push_back(block.fileNames[0]);
+//                        meta.layers[layer.n_scale].blocks[k].depths.push_back(block.depths[0]);
+//                        meta.layers[layer.n_scale].blocks[k].offsets_D.push_back(block.offsets_D[0]);
+//                    }
 
-                    continue;
-                }
-            }
+//                    continue;
+//                }
+//            }
 
-            if(found)
-            {
-                continue;
-            }
-            else
-            {
-                meta.layers[layer.n_scale].blocks.push_back(block);
-            }
+//            if(found)
+//            {
+//                continue;
+//            }
+//            else
+//            {
+//                meta.layers[layer.n_scale].blocks.push_back(block);
+//            }
 
-            //cout<<"block.fileNames[0] "<<block.fileNames[0]<<" "<<block.fileNames.size()<<endl;
-            //cout<<"block.dirName "<<block.dirName<<endl;
-        }
-    }
-    cout<<"finish meta info construction"<<endl;
+//            //cout<<"block.fileNames[0] "<<block.fileNames[0]<<" "<<block.fileNames.size()<<endl;
+//            //cout<<"block.dirName "<<block.dirName<<endl;
+//        }
+//    }
+//    cout<<"finish meta info construction"<<endl;
 
     //
     return 0;

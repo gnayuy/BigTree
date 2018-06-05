@@ -68,6 +68,9 @@ int makeDir(const char *filepath);
 char *copyFile(const char *srcFile, const char *dstFile);
 
 //
+float fastmax(const std::vector<float>& v);
+
+//
 void halveSample(uint8* img, int height, int width, int depth, int method, int bytes_chan);
 
 //

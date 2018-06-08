@@ -4,4 +4,5 @@ Usage:
 
 time ./BigTree "input_dir" "output_dir" 5
 
-time ./teraconvmdata -s="input_dir" -d="output_dir" 
+time ./teraconvmdata -s="input_dir" -d="output_dir" --halve=max --resolutions=01234 --width=256 --height=256 --depth=256 --sfmt="TIFF (series, 2D)" --dfmt="TIFF (tiled, 3D)" --libtiff_rowsperstrip=-1
+ 

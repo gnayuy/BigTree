@@ -37,7 +37,16 @@ int main (int argc, const char *argv[])
     int genMetaInfo = 0; // write mdata.bin
     bool genZeroData = false;
 
-    BigTree bigtree(argv[1], argv[2], atoi(argv[3]), genMetaInfo, genZeroData);
+    if(argc<4)
+    {
+        BigTree bigtree(argv[1], argv[2], nScale, genMetaInfo, genZeroData);
+    }
+    else
+    {
+        BigTree bigtree(argv[1], argv[2], atoi(argv[3]), genMetaInfo, genZeroData);
+    }
+
+
 
     //
 //    try

@@ -1,0 +1,7 @@
+
+
+Usage:
+
+time ./BigTree "input_dir" "output_dir" 5
+
+time ./teraconvmdata -s="input_dir" -d="output_dir" 

@@ -457,7 +457,9 @@ uint8 *BigTree::load(long zs, long ze)
     }
 
     // multithreaded read TIFFs from memory
-    omp_set_num_threads(omp_get_max_threads());
+    // omp_set_num_threads(omp_get_max_threads());
+
+    omp_set_num_threads(16); // hard coded for seu-allen computer
     #pragma omp parallel
     {
         #pragma omp for

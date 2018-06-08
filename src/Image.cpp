@@ -415,10 +415,12 @@ char *loadTiffMetaInfo(char* filename, uint32 &sz0, uint32  &sz1, uint32  &sz2, 
         return ((char *) "Undefined bits per sample.");
     }
 
-    if (!TIFFGetField(input, TIFFTAG_SAMPLESPERPIXEL, &sz3))
-    {
-        sz3 = 1;
-    }
+//    if (!TIFFGetField(input, TIFFTAG_SAMPLESPERPIXEL, &sz3))
+//    {
+//        sz3 = 1;
+//    }
+
+    sz3 = 1; // hard coded here 6/8/2018
 
     uint16 Cpage;
     if (!TIFFGetField(input, TIFFTAG_PAGENUMBER, &Cpage, &sz2) || sz2==0)

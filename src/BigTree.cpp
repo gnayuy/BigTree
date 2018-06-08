@@ -126,6 +126,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, int genMetaInfo,
     srcdir.assign(inputdir);
     dstdir.assign(outputdir);
 
+    //
+    omp_set_num_threads(omp_get_max_threads());
 
     //
     if(init())
@@ -229,6 +231,7 @@ int BigTree::init()
     loadTiffMetaInfo(const_cast<char*>(firstfilepath.c_str()), width, height, depth, color, datatype);
     depth = input2DTIFFs.size();
 
+    cout<<"Image Info obtained from "<<firstfilepath<<endl;
     cout<<"Image Size "<<width<<"x"<<height<<"x"<<depth<<"x"<<color<<" with "<<datatype<<endl;
 
     // for the case with small z
@@ -457,9 +460,6 @@ uint8 *BigTree::load(long zs, long ze)
     }
 
     // multithreaded read TIFFs from memory
-    // omp_set_num_threads(omp_get_max_threads());
-
-    omp_set_num_threads(16); // hard coded for seu-allen computer
     #pragma omp parallel
     {
         #pragma omp for
@@ -477,7 +477,7 @@ uint8 *BigTree::load(long zs, long ze)
 int BigTree::reformat()
 {
     // meta
-    vector<LAYER> layers;
+//    vector<LAYER> layers;
 
     //
     int stack_block[TMITREE_MAX_HEIGHT];
@@ -616,17 +616,17 @@ int BigTree::reformat()
                 //cout<<"base_path "<<base_path.str()<<endl;
 
                 // meta info for index()
-                bool addMeta = false;
+//                bool addMeta = false;
 
-                if(z == 0)
-                {
-                    addMeta = true;
-                }
-                else if( (int)(slice_start[i] / stacks_D[i][0][0][stack_block[i]]) > nzsize[i])
-                {
-                    nzsize[i]++;
-                    addMeta = true;
-                }
+//                if(z == 0)
+//                {
+//                    addMeta = true;
+//                }
+//                else if( (int)(slice_start[i] / stacks_D[i][0][0][stack_block[i]]) > nzsize[i])
+//                {
+//                    nzsize[i]++;
+//                    addMeta = true;
+//                }
 
                 //looping on new stacks
                 for(int stack_row = 0, start_height = 0, end_height = 0; stack_row < n_stacks_V[i]; stack_row++)
@@ -800,22 +800,22 @@ int BigTree::reformat()
                         }// genMetaInfoOnly
 
                         // meta info for index()
-                        BLOCK block;
+//                        BLOCK block;
 
-                        if(addMeta)
-                        {
-                            block.width = sz[0];
-                            block.height = sz[1];
-                            block.depths.push_back(sz[2]);
-                            block.color = sz[3];
-                            block.bytesPerVoxel = datatype_out;
+//                        if(addMeta)
+//                        {
+//                            block.width = sz[0];
+//                            block.height = sz[1];
+//                            block.depths.push_back(sz[2]);
+//                            block.color = sz[3];
+//                            block.bytesPerVoxel = datatype_out;
 
-                            block.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
-                            block.offset_H = start_width;
-                            block.offset_V = start_height;
-                            block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
-                            block.offsets_D.push_back(slice_start[i]);
-                        }
+//                            block.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
+//                            block.offset_H = start_width;
+//                            block.offset_V = start_height;
+//                            block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
+//                            block.offsets_D.push_back(slice_start[i]);
+//                        }
 
                         bool blocksaved = false;
 
@@ -913,11 +913,11 @@ int BigTree::reformat()
                                         }
 
                                         // temporary save all the way (version 1.01 5/25/2018)
-                                        int temp_n_chans = color;
-                                        if(temp_n_chans==2)
-                                            temp_n_chans++;
+//                                        int temp_n_chans = color;
+//                                        if(temp_n_chans==2)
+//                                            temp_n_chans++;
 
-                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+                                        appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],color,8,sz[2]);
                                         blocksaved = true;
 
                                         //
@@ -1047,13 +1047,13 @@ int BigTree::reformat()
                         start_width  += stacks_H[i][stack_row][stack_column][0];
 
                         //
-                        if(addMeta)
-                        {
-                            block.nonZeroBlocks.push_back(blocksaved);
-                            block.nBlocksPerDir = block.fileNames.size();
-                            layer.blocks.push_back(block);
-                            layer.n_scale = i;
-                        }
+//                        if(addMeta)
+//                        {
+//                            block.nonZeroBlocks.push_back(blocksaved);
+//                            block.nBlocksPerDir = block.fileNames.size();
+//                            layer.blocks.push_back(block);
+//                            layer.n_scale = i;
+//                        }
 
                     }
                     start_height += stacks_V[i][stack_row][0][0];
@@ -1061,10 +1061,10 @@ int BigTree::reformat()
             }
 
             //
-            if(!layer.blocks.empty())
-            {
-                layers.push_back(layer);
-            }
+//            if(!layer.blocks.empty())
+//            {
+//                layers.push_back(layer);
+//            }
         }
 
         //releasing allocated memory

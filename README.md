@@ -8,8 +8,6 @@ More details see our paper "BigTree: high-performance hierarchical tree construc
 
 Install [libtiff][] by following the instructions on their website. This is required for read and write images.
 
-We use [cxxopts][] to parse command lines, which requires gcc > 4.9.
-
 To get the source via the following commands:
 
     git clone https://github.com/gnayuy/BigTree.git
@@ -26,7 +24,7 @@ To build the source via the following commands:
 
 Assuming your input images are 2D image slices stored in one folder in order. For example, converting to a 5-scale tree data structure, we simply type command:
 
-    % bigtree -i <path_dir_input_images> -o <path_dir_output> -n 5
+    % bigtree <path_dir_input_images> <path_dir_output> 5
     
 This is equavelent to using [TeraConverter][] [2] as:
 

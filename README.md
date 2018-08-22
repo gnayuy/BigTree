@@ -28,7 +28,7 @@ Assuming your input images are 2D image slices stored in one folder in order. Fo
 
     % bigtree -i <path_dir_input_images> -o <path_dir_output> -n 5
     
-This is equavelent to using [TeraConverter][] as:
+This is equavelent to using [TeraConverter][] [2] as:
 
     % teraconverter -s="<path_dir_input_images>" -d="<path_dir_output>" --sfmt="TIFF (series, 2D)" --dfmt="TIFF (tiled, 3D)" --rescale=4 --resolutions=01234 --width=256 --height=256 --depth=256 --halve=max --libtiff_rowsperstrip=-1
     
@@ -39,6 +39,7 @@ This is equavelent to using [TeraConverter][] as:
 ## references
 
 [1]. Bria A, Iannello G, Onofri L, Peng H. TeraFly: real-time three-dimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat Methods. 2016;13:192–4.
+[2]. Bria A, Iannello G. TeraStitcher - a tool for fast automatic 3D-stitching of teravoxel-sized microscopy images. BMC bioinformatics. 2012;13:316. doi: 10.1186/1471-2105-13-316.
 
 [libtiff]:http://www.libtiff.org
 [TIFF]:http://www.libtiff.org/support.html

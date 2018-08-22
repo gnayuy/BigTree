@@ -39,6 +39,7 @@ This is equavelent to using [TeraConverter][] [2] as:
 ## references
 
 [1]. Bria A, Iannello G, Onofri L, Peng H. TeraFly: real-time three-dimensional visualization and annotation of terabytes of multidimensional volumetric images. Nat Methods. 2016;13:192–4.
+
 [2]. Bria A, Iannello G. TeraStitcher - a tool for fast automatic 3D-stitching of teravoxel-sized microscopy images. BMC bioinformatics. 2012;13:316. doi: 10.1186/1471-2105-13-316.
 
 [libtiff]:http://www.libtiff.org

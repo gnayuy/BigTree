@@ -4,6 +4,8 @@ BigTree, **B**ig **I**ma**G**e hierarchical **TREE** construction software, is d
 
 More details see our paper "BigTree: high-performance hierarchical tree construction for large image data sets". (in preparation)
 
+Source codes are moved to https://github.com/Vaa3D/vaa3d_tools/tree/master/hackathon/yang/BigTree.
+
 ## build with cmake
 
 Install [libtiff][] by following the instructions on their website. This is required for read and write images.

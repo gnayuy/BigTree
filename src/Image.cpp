@@ -54,15 +54,15 @@ char *copyFile(const char *srcFile, const char *dstFile)
 float fastmax(const std::vector<float>& v)
 {
     float shared_max;
-#pragma omp parallel
+    #pragma omp parallel
     {
         float max = std::numeric_limits<float>::min();
-#pragma omp for nowait
+        #pragma omp for nowait
         for(size_t ii=0; ii<v.size(); ++ii)
         {
             max = std::max(v[ii], max);
         }
-#pragma omp critical
+        #pragma omp critical
         {
             shared_max = std::min(shared_max, max);
         }
@@ -110,7 +110,7 @@ void halveSample(uint8* img, int height, int width, int depth, int method, int b
         }
         else if ( method == HALVE_BY_MAX )
         {
-            #pragma omp parallel for collapse(3)
+            //#pragma omp parallel for collapse(3)
             for(long z=0; z<d; z++)
             {
                 for(long i=0; i<h; i++)
@@ -1403,9 +1403,10 @@ int V3DRAWIO::readlocal(FILE *fid, uint8* &p, long offsets, long xlocal, long yl
     }
 
     //
-    fseek(fid, offsets, SEEK_SET );
+    // fseek(fid, offsets, SEEK_SET );
 
-
+    //
+    return 0;
 }
 
 int V3DRAWIO::read(char* filename, uint8* &img, int &viHeight, int &viWidth, int &viDepth, int &type, int &height, int &width, int &depth, int &startx, int &starty, int &startz, int szMemory, int threads)

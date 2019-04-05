@@ -1511,11 +1511,11 @@ int BigTree::reformat()
 
         // saving the sub volume
         start = std::chrono::high_resolution_clock::now();
-        for(int i=0; i< resolutions; i++)
+        for(int i=0; i<resolutions; i++)
         {
-            //cout<<"resolution "<<i<<endl;
+            cout<<"resolution "<<i<<endl;
 
-            // meta info for index()
+            // meta
             Layer layer;
             layer.rows = n_stacks_V[i];
             layer.cols = n_stacks_H[i];
@@ -1979,7 +1979,7 @@ int BigTree::reformat()
                                     // 8-bit output
 
                                     //
-                                    #pragma omp parallel for collapse(2)
+                                    //#pragma omp parallel for collapse(2)
                                     for(long y=0; y<sz[1]; y++)
                                     {
                                         for(long x=0; x<sz[0]; x++)
@@ -1989,11 +1989,11 @@ int BigTree::reformat()
                                     }
 
                                     // temporary save all the way (version 1.01 5/25/2018)
-                                    int temp_n_chans = color;
-                                    if(temp_n_chans==2)
-                                        temp_n_chans++;
+//                                    int temp_n_chans = color;
+//                                    if(temp_n_chans==2)
+//                                        temp_n_chans++;
 
-                                    appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],temp_n_chans,8,sz[2]);
+                                    appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)p,sz[0],sz[1],color,8,sz[2]);
                                     blocksaved = true;
 
                                     //
@@ -2050,6 +2050,7 @@ int BigTree::reformat()
                         //                            layer.n_scale = i;
                         //                        }
 
+                        yxfolder.ncubes = yxfolder.cubes.size();
                         layer.yxfolders.insert(make_pair(yxfolder.dirName, yxfolder));
                     }
                     start_height += stacks_V[i][stack_row][0][0];
@@ -2216,7 +2217,6 @@ int BigTree::index()
         cout<<"layer.rows "<<layer.rows<<endl;
         cout<<"layer.cols "<<layer.cols<<endl;
 
-
         //
         int count = 0;
         int nyxfolders = layer.yxfolders.size();
@@ -2237,9 +2237,9 @@ int BigTree::index()
             //
             YXFolder yxfolder = (iter++)->second;
 
-            // cout<<"check ncubes ... "<<yxfolder.ncubes<<" at "<<count<<endl;
+            cout<<"... debug ... cubes ..."<<yxfolder.cubes.size()<<endl;
 
-            // cout<<"check "<<layer.yxfolders[yxfolder.dirName].toBeCopied<<endl;
+            cout<<"check ncubes ... "<<yxfolder.ncubes<<" at "<<count<<endl;
 
             //
             fwrite(&(yxfolder.height), sizeof(unsigned int), 1, file);
@@ -2251,6 +2251,8 @@ int BigTree::index()
             fwrite(&(yxfolder.offset_H), sizeof(int), 1, file);
             fwrite(&(yxfolder.lengthDirName), sizeof(unsigned short), 1, file);
             fwrite(const_cast<char *>(yxfolder.dirName.c_str()), yxfolder.lengthDirName, 1, file);
+
+            cout<<yxfolder.height<<" "<<yxfolder.width<<" "<<layer.dim_D<<" "<<color<<" "<<yxfolder.offset_V<<" "<<yxfolder.offset_H<<endl;
 
             //
             int countCube = 0;
@@ -2265,7 +2267,7 @@ int BigTree::index()
                     continue;
                 }
 
-                // cout<<"countCube "<<countCube<<" >= "<<ncubes<<endl;
+                cout<<"countCube "<<countCube<<" >= "<<ncubes<<endl;
 
                 //
                 Cube cube = (it++)->second;
@@ -2275,8 +2277,12 @@ int BigTree::index()
                 fwrite(const_cast<char *>(cube.fileName.c_str()), yxfolder.lengthFileName, 1, file);
                 fwrite(&(cube.depth), sizeof(unsigned int), 1, file);
                 fwrite(&(cube.offset_D), sizeof(int), 1, file);
+
+                cout<<cube.depth<<" "<<cube.offset_D<<" "<<cube.fileName<<endl;
             }
             fwrite(&(yxfolder.bytesPerVoxel), sizeof(unsigned int), 1, file);
+
+            cout<<yxfolder.bytesPerVoxel<<endl;
         }
         fclose(file);
     }

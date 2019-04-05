@@ -475,10 +475,6 @@ QueryAndCopy::QueryAndCopy(string swcfile, string inputdir, string outputdir, fl
                         string srcFilePath = inputdir + "/" + yxfolder.dirName + "/" + cube.fileName;
                         string dstFilePath = outputdir + "/" + yxfolder.dirName + "/" + cube.fileName;
 
-                        //                        QString filePath = QString::fromAscii(yxfolder.dirName.c_str()).append(QString("/")).append(QString::fromAscii(cube.fileName.c_str()));
-                        //                        QString srcFilePath = QString::fromStdString(inputdir) + "/" + filePath;
-                        //                        QString dstFilePath = QString::fromStdString(outputdir) + "/" + filePath;
-
                         copyblock(srcFilePath, dstFilePath);
 
                         //
@@ -1056,12 +1052,12 @@ long QueryAndCopy::findOffset(OffsetType offsets, long idx)
 }
 
 //
-BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron)
+BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, int numImages, unsigned int bsx, unsigned int bsy, unsigned int bsz)
 {
     // default parameters settings
-    block_width = 256;
-    block_height = 256;
-    block_depth = 256;
+    block_width = bsx;
+    block_height = bsy;
+    block_depth = bsz;
 
     zstart = 0;
     zpart = 1;
@@ -1072,6 +1068,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron)
 
     //
     nbits = 4; // remove lower n bits?
+
+    numImagesLoaded = numImages;
 
     //
     ubuffer = NULL;
@@ -1363,7 +1361,7 @@ int BigTree::init()
     }
 
     //
-    z_max_res = max(min(MAX_IMAGES_STREAM,(int)block_depth/2),(int)pow(2,halve_pow2[resolutions-1]));
+    z_max_res = max(min(numImagesLoaded,(int)block_depth/2),(int)pow(2,halve_pow2[resolutions-1]));
     if ( (z_max_res > 1) && z_max_res > block_depth/2 )
     {
         cout<<"too many resolutions "<<resolutions<<endl;
@@ -1513,7 +1511,7 @@ int BigTree::reformat()
         start = std::chrono::high_resolution_clock::now();
         for(int i=0; i<resolutions; i++)
         {
-            cout<<"resolution "<<i<<endl;
+            //cout<<"resolution "<<i<<endl;
 
             // meta
             Layer layer;
@@ -1589,19 +1587,6 @@ int BigTree::reformat()
                 base_path << filePaths[i] << "/";
 
                 //cout<<"base_path "<<base_path.str()<<endl;
-
-                // meta info for index()
-                //                bool addMeta = false;
-
-                //                if(z == 0)
-                //                {
-                //                    addMeta = true;
-                //                }
-                //                else if( (int)(slice_start[i] / stacks_D[i][0][0][stack_block[i]]) > nzsize[i])
-                //                {
-                //                    nzsize[i]++;
-                //                    addMeta = true;
-                //                }
 
                 //looping on new stacks
                 for(int stack_row = 0, start_height = 0, end_height = 0; stack_row < n_stacks_V[i]; stack_row++)
@@ -1796,35 +1781,6 @@ int BigTree::reformat()
                         {
                             cout<<"fail to alloc memory \n";
                         }
-
-                        // meta
-//                        YXFolder yxfolder;
-
-//                        yxfolder.width = sz[0];
-//                        yxfolder.height = sz[1];
-//                        yxfolder.color = sz[3];
-//                        yxfolder.bytesPerVoxel = datatype_out;
-
-//                        yxfolder.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
-//                        yxfolder.offset_H = start_width;
-//                        yxfolder.offset_V = start_height;
-
-                        //                        BLOCK block;
-
-                        //                        if(addMeta)
-                        //                        {
-                        //                            block.width = sz[0];
-                        //                            block.height = sz[1];
-                        //                            block.depths.push_back(sz[2]);
-                        //                            block.color = sz[3];
-                        //                            block.bytesPerVoxel = datatype_out;
-
-                        //                            block.dirName = multires_merging_x_pos.str() + "/" + multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str();
-                        //                            block.offset_H = start_width;
-                        //                            block.offset_V = start_height;
-                        //                            block.fileNames.push_back(multires_merging_x_pos.str() + "_" + multires_merging_y_pos.str() + "_" + abs_pos_z.str() + ".tif");
-                        //                            block.offsets_D.push_back(slice_start[i]);
-                        //                        }
 
                         bool blocksaved = false;
 
@@ -2073,77 +2029,6 @@ int BigTree::reformat()
         cout<<"writing sub volume's chunk images takes "<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<" ms."<<endl;
     }
 
-    // reconstruct meta info
-    //    for(int i=0; i<layers.size(); i++)
-    //    {
-    //        LAYER layer = layers[i];
-    //        cout<<"layer "<<i<<": "<<layer.n_scale<<" of "<<layers.size()<<endl;
-
-    //        //
-    //        if(meta.layers.empty() || meta.layers.size() <= layer.n_scale)
-    //        {
-    //            meta.layers.push_back(layer);
-    //            continue;
-    //        }
-
-    //        LAYER mlayer = meta.layers[layer.n_scale];
-
-    //        cout<<" ... blocks "<<layer.blocks.size()<<endl;
-
-    //        //
-    //        for(int j=0; j<layer.blocks.size(); j++)
-    //        {
-    //            //cout<<"block "<<j<<" of "<<layer.blocks.size()<<endl;
-
-    //            BLOCK block = layer.blocks[j];
-
-    //            bool found = false;
-    //            for(int k=0; k<mlayer.blocks.size(); k++)
-    //            {
-    //                BLOCK mblock = mlayer.blocks[k];
-
-    //                //if(mblock.dirName.compare(block.dirName) == 0)
-    //                if(compareString(mblock.dirName.c_str(), block.dirName.c_str(), mblock.dirName.length()) == 0)
-    //                {
-    //                    found = true;
-
-    //                    bool added = false;
-    //                    for(int iname=0; iname<mblock.fileNames.size(); iname++)
-    //                    {
-    //                        //if(mblock.fileNames[iname].compare(block.fileNames[0]) == 0)
-    //                        if(compareString(mblock.fileNames[iname].c_str(), block.fileNames[0].c_str(), mblock.fileNames[iname].length()) == 0)
-    //                        {
-    //                            added = true;
-    //                            continue;
-    //                        }
-    //                    }
-
-    //                    if(!added)
-    //                    {
-    //                        meta.layers[layer.n_scale].blocks[k].fileNames.push_back(block.fileNames[0]);
-    //                        meta.layers[layer.n_scale].blocks[k].depths.push_back(block.depths[0]);
-    //                        meta.layers[layer.n_scale].blocks[k].offsets_D.push_back(block.offsets_D[0]);
-    //                    }
-
-    //                    continue;
-    //                }
-    //            }
-
-    //            if(found)
-    //            {
-    //                continue;
-    //            }
-    //            else
-    //            {
-    //                meta.layers[layer.n_scale].blocks.push_back(block);
-    //            }
-
-    //            //cout<<"block.fileNames[0] "<<block.fileNames[0]<<" "<<block.fileNames.size()<<endl;
-    //            //cout<<"block.dirName "<<block.dirName<<endl;
-    //        }
-    //    }
-    //    cout<<"finish meta info construction"<<endl;
-
     //
     return 0;
 }
@@ -2164,7 +2049,7 @@ int BigTree::index()
     //
     for(int res_i=0; res_i< resolutions; res_i++)
     {
-        cout<<"res_i "<<res_i<<endl;
+        //cout<<"res_i "<<res_i<<endl;
 
         //
         string filename = filePaths[res_i] + "/mdata.bin";
@@ -2196,26 +2081,26 @@ int BigTree::index()
         fwrite(&(layer.rows), sizeof(uint16), 1, file);
         fwrite(&(layer.cols), sizeof(uint16), 1, file);
 
-        cout<<"filename "<<filename<<endl;
+//        cout<<"filename "<<filename<<endl;
 
-        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
-        cout<<"meta.reference_V "<<meta.reference_V<<endl;
-        cout<<"meta.reference_H "<<meta.reference_H<<endl;
-        cout<<"meta.reference_D "<<meta.reference_D<<endl;
-        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-        cout<<"layer.vs_x "<<layer.vs_x<<endl;
-        cout<<"layer.vs_y "<<layer.vs_y<<endl;
-        cout<<"layer.vs_z "<<layer.vs_z<<endl;
-        cout<<"meta.org_V "<<meta.org_V<<endl;
-        cout<<"meta.org_H "<<meta.org_H<<endl;
-        cout<<"meta.org_D "<<meta.org_D<<endl;
-        cout<<"layer.dim_V "<<layer.dim_V<<endl;
-        cout<<"layer.dim_H "<<layer.dim_H<<endl;
-        cout<<"layer.dim_D "<<layer.dim_D<<endl;
-        cout<<"layer.rows "<<layer.rows<<endl;
-        cout<<"layer.cols "<<layer.cols<<endl;
+//        cout<<"meta.mdata_version "<<meta.mdata_version<<endl;
+//        cout<<"meta.reference_V "<<meta.reference_V<<endl;
+//        cout<<"meta.reference_H "<<meta.reference_H<<endl;
+//        cout<<"meta.reference_D "<<meta.reference_D<<endl;
+//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+//        cout<<"layer.vs_x "<<layer.vs_x<<endl;
+//        cout<<"layer.vs_y "<<layer.vs_y<<endl;
+//        cout<<"layer.vs_z "<<layer.vs_z<<endl;
+//        cout<<"meta.org_V "<<meta.org_V<<endl;
+//        cout<<"meta.org_H "<<meta.org_H<<endl;
+//        cout<<"meta.org_D "<<meta.org_D<<endl;
+//        cout<<"layer.dim_V "<<layer.dim_V<<endl;
+//        cout<<"layer.dim_H "<<layer.dim_H<<endl;
+//        cout<<"layer.dim_D "<<layer.dim_D<<endl;
+//        cout<<"layer.rows "<<layer.rows<<endl;
+//        cout<<"layer.cols "<<layer.cols<<endl;
 
         //
         int count = 0;
@@ -2223,7 +2108,7 @@ int BigTree::index()
         map<string, YXFolder>::iterator iter = layer.yxfolders.begin();
         while(iter != layer.yxfolders.end())
         {
-            cout<<"... count "<<count<<" of "<<nyxfolders<<endl;
+            //cout<<"... count "<<count<<" of "<<nyxfolders<<endl;
 
             //
             if(count++ >= nyxfolders)
@@ -2237,9 +2122,7 @@ int BigTree::index()
             //
             YXFolder yxfolder = (iter++)->second;
 
-            cout<<"... debug ... cubes ..."<<yxfolder.cubes.size()<<endl;
-
-            cout<<"check ncubes ... "<<yxfolder.ncubes<<" at "<<count<<endl;
+            //cout<<"check ncubes ... "<<yxfolder.ncubes<<" at "<<count<<endl;
 
             //
             fwrite(&(yxfolder.height), sizeof(unsigned int), 1, file);
@@ -2252,7 +2135,7 @@ int BigTree::index()
             fwrite(&(yxfolder.lengthDirName), sizeof(unsigned short), 1, file);
             fwrite(const_cast<char *>(yxfolder.dirName.c_str()), yxfolder.lengthDirName, 1, file);
 
-            cout<<yxfolder.height<<" "<<yxfolder.width<<" "<<layer.dim_D<<" "<<color<<" "<<yxfolder.offset_V<<" "<<yxfolder.offset_H<<endl;
+            //cout<<yxfolder.height<<" "<<yxfolder.width<<" "<<layer.dim_D<<" "<<color<<" "<<yxfolder.offset_V<<" "<<yxfolder.offset_H<<endl;
 
             //
             int countCube = 0;
@@ -2267,7 +2150,7 @@ int BigTree::index()
                     continue;
                 }
 
-                cout<<"countCube "<<countCube<<" >= "<<ncubes<<endl;
+                //cout<<"countCube "<<countCube<<" >= "<<ncubes<<endl;
 
                 //
                 Cube cube = (it++)->second;
@@ -2278,11 +2161,11 @@ int BigTree::index()
                 fwrite(&(cube.depth), sizeof(unsigned int), 1, file);
                 fwrite(&(cube.offset_D), sizeof(int), 1, file);
 
-                cout<<cube.depth<<" "<<cube.offset_D<<" "<<cube.fileName<<endl;
+                //cout<<cube.depth<<" "<<cube.offset_D<<" "<<cube.fileName<<endl;
             }
             fwrite(&(yxfolder.bytesPerVoxel), sizeof(unsigned int), 1, file);
 
-            cout<<yxfolder.bytesPerVoxel<<endl;
+            //cout<<yxfolder.bytesPerVoxel<<endl;
         }
         fclose(file);
     }

@@ -2,9 +2,6 @@
 
 #include "Image.h"
 
-//
-#define MAX_IMAGES_STREAM 16
-
 // meta
 // Folder: Y/Y_X
 // File: Y_X_Z.tif
@@ -89,7 +86,7 @@ public:
 class BigTree
 {
 public:
-    BigTree(string inputdir, string outputdir, int scales=3, string neuron="");
+    BigTree(string inputdir, string outputdir, int scales=3, string neuron="", int numImages=16, unsigned int bsx=256, unsigned int bsy=256, unsigned int bsz=256);
     ~BigTree();
 
 public:
@@ -124,6 +121,8 @@ public:
 
     int zstart, zpart;
     string config4resume;
+
+    int numImagesLoaded;
 };
 
 // swc

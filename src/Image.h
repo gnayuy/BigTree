@@ -19,6 +19,7 @@
 #include <chrono>
 #include <map>
 #include <iterator>
+#include <algorithm>
 
 #include <omp.h>
 

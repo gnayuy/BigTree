@@ -727,17 +727,17 @@ int QueryAndCopy::readMetaData(string filename, bool mDataDebug)
                     count++;
                 }
 
-                if (std::find(xoff.begin(), xoff.end(), long(block.offset_x)) == xoff.end())
+                if(find(xoff.begin(), xoff.end(), long(block.offset_x)) == xoff.end())
                 {
                     xoff.push_back(long(block.offset_x));
                 }
 
-                if (std::find(yoff.begin(), yoff.end(), long(block.offset_y)) == yoff.end())
+                if(find(yoff.begin(), yoff.end(), long(block.offset_y)) == yoff.end())
                 {
                     yoff.push_back(long(block.offset_y));
                 }
 
-                if (std::find(zoff.begin(), zoff.end(), long(block.offset_z)) == zoff.end())
+                if(find(zoff.begin(), zoff.end(), long(block.offset_z)) == zoff.end())
                 {
                     zoff.push_back(long(block.offset_z));
                 }

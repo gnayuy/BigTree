@@ -6,6 +6,8 @@
 // Folder: Y/Y_X
 // File: Y_X_Z.tif
 
+typedef map<int,string, std::greater<int> > DIRs;
+
 // block
 class Cube
 {
@@ -120,7 +122,7 @@ public:
     TMITREE meta;
 
     int zstart, zpart;
-    string config4resume;
+    string config4resume, config;
 
     int numImagesLoaded;
 };

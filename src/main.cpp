@@ -62,7 +62,7 @@ int main (int argc, const char *argv[])
             {
                 if(suffix.substr(n) == "swc")
                 {
-                    BigTree bigtree(argv[1], argv[2], 3, str);
+                    BigTree bigtree(argv[1], argv[2], 3, str); // big geometric tree
                     return 0;
                 }
             }

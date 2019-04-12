@@ -1095,6 +1095,23 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, i
 
         // load input swc file "neuron" and mdata.bin
 
+        //
+        DIR *outdir = opendir(outputdir.c_str());
+        if(outdir == NULL)
+        {
+            // mkdir outdir
+            if(makeDir(outputdir.c_str()))
+            {
+                cout<<"fail in mkdir "<<outputdir<<endl;
+                return;
+            }
+        }
+        else
+        {
+            closedir(outdir);
+        }
+
+        //
         DIRs subDirs;
 
         DIR *dir = opendir(srcdir.c_str());

@@ -1092,8 +1092,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, i
 
         while (entry != NULL)
         {
-            if (entry->d_type == DT_DIR)
-            {
+            //if (entry->d_type == DT_DIR)
+            //{
                 string folderPrefix = "RES";
                 string subfolder = entry->d_name;
 
@@ -1107,7 +1107,7 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, i
 
                     subDirs[ yDimNum ] = subfolder;
                 }
-            }
+            //}
             entry = readdir(dir);
         }
         closedir(dir);

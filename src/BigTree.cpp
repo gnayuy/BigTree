@@ -1014,6 +1014,16 @@ long QueryAndCopy::findOffset(OffsetType offsets, long idx)
 //
 BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, int numImages, unsigned int bsx, unsigned int bsy, unsigned int bsz)
 {
+    // init
+    halve_pow2 = NULL;
+    n_stacks_V = NULL;
+    n_stacks_H = NULL;
+    n_stacks_D = NULL;
+
+    stacks_V = NULL;
+    stacks_H = NULL;
+    stacks_D = NULL;
+
     // default parameters settings
     block_width = bsx;
     block_height = bsy;

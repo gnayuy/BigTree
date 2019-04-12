@@ -58,7 +58,7 @@ int main (int argc, const char *argv[])
             string suffix = str.substr(str.find_last_of('.')+1);
             int n = suffix.size() - 3;
 
-            if(n>0)
+            if(n>=0)
             {
                 if(suffix.substr(n) == "swc")
                 {

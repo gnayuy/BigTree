@@ -42,6 +42,7 @@ int main (int argc, const char *argv[])
     //
     int numImages=16;
 
+
     //
     if(argc==3)
     {
@@ -73,7 +74,7 @@ int main (int argc, const char *argv[])
 
             if(n>0 && n<10)
             {
-                BigTree bigtree(argv[1], argv[2], n);
+                BigTree bigtree(argv[1], argv[2], n, "", 16, 256, 256, 256, 0, 2); // bigtree conversion
                 return 0;
             }
         }

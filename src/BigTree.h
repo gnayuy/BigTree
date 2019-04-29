@@ -88,7 +88,7 @@ public:
 class BigTree
 {
 public:
-    BigTree(string inputdir, string outputdir, int scales=3, string neuron="", int numImages=16, unsigned int bsx=256, unsigned int bsy=256, unsigned int bsz=256);
+    BigTree(string inputdir, string outputdir, int scales=3, string neuron="", int numImages=16, unsigned int bsx=256, unsigned int bsy=256, unsigned int bsz=256, int nBits=4, int outDatatype=1);
     ~BigTree();
 
 public:
@@ -118,6 +118,7 @@ public:
     long z_ratio, z_max_res;
     uint8 *ubuffer;
     int nbits;
+    int datatype_out;
 
     TMITREE meta;
 

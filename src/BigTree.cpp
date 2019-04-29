@@ -1012,7 +1012,7 @@ long QueryAndCopy::findOffset(OffsetType offsets, long idx)
 }
 
 //
-BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, int numImages, unsigned int bsx, unsigned int bsy, unsigned int bsz)
+BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, int numImages, unsigned int bsx, unsigned int bsy, unsigned int bsz, int nBits, int outDatatype)
 {
     // init
     halve_pow2 = NULL;
@@ -1038,7 +1038,8 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, i
     resume();
 
     //
-    nbits = 4; // remove lower n bits?
+    nbits = nBits; // remove lower n bits?
+    datatype_out = outDatatype; // 1: 8-bit; 2: 16-bit
 
     numImagesLoaded = numImages;
 
@@ -1485,6 +1486,9 @@ uint8 *BigTree::load(long zs, long ze, long zp)
 
 int BigTree::reformat()
 {
+
+    cout<<"... debug ..."<<nbits<<" ... "<<datatype_out<<endl;
+
     // meta
     //    vector<LAYER> layers;
 
@@ -1645,7 +1649,7 @@ int BigTree::reformat()
 
                     unsigned int sz[4];
                     // int datatype_out = 2; // changed to 16-bit 6/1/2018 yy
-                    int datatype_out = 1;
+                    // int datatype_out = 1;
 
                     //
                     for(int stack_column = 0, start_width=0, end_width=0; stack_column < n_stacks_H[i]; stack_column++)
@@ -1928,6 +1932,9 @@ int BigTree::reformat()
                                 }
                                 else
                                 {
+
+                                    cout<<"... debug ... 16-bit output" <<slice_ind<<" "<<offset<<endl;
+
                                     // 16-bit output
 
                                     uint16 *out_ch16 = (uint16 *) p;
@@ -1943,11 +1950,13 @@ int BigTree::reformat()
                                     }
 
                                     // temporary save all the way (version 1.01 5/25/2018)
-                                    int temp_n_chans = color;
-                                    if(temp_n_chans==2)
-                                        temp_n_chans++;
+//                                    int temp_n_chans = color;
+//                                    if(temp_n_chans==2)
+//                                        temp_n_chans++;
 
-                                    appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)out_ch16,sz[0],sz[1],temp_n_chans,16,sz[2]);
+                                    // appendSlice2Tiff3DFile(fhandle,slice_ind,(unsigned char *)out_ch16,sz[0],sz[1],color,16,sz[2]);
+                                    thread t(appendSlice2Tiff3DFile, fhandle,slice_ind,(unsigned char *)out_ch16,sz[0],sz[1],color,16,sz[2]);
+                                    t.join();
                                     blocksaved = true;
 
                                 }

@@ -20,6 +20,7 @@
 #include <map>
 #include <iterator>
 #include <algorithm>
+#include <thread>
 
 #include <omp.h>
 

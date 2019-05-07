@@ -40,8 +40,9 @@ int main (int argc, const char *argv[])
     }
 
     //
-    int numImages=16;
+    int numImages=32;
 
+    cout<<"max load "<<numImages<<" 2D images each time"<<endl;
 
     //
     if(argc==3)

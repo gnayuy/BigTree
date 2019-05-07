@@ -1524,6 +1524,8 @@ int BigTree::reformat()
         // remove lower 4 bits for 16bit input data
         if(datatype>1 && nbits)
         {
+            cout<<"removing lower "<<nbits<<endl;
+
             long totalvoxels = (height * width * ((z_ratio>0) ? z_max_res : (depth%z_max_res)))*color;
             if ( datatype == 2 )
             {
@@ -1933,7 +1935,7 @@ int BigTree::reformat()
                                 else
                                 {
 
-                                    cout<<"... debug ... 16-bit output" <<slice_ind<<" "<<offset<<endl;
+                                    // cout<<"... debug ... 16-bit output" <<slice_ind<<" "<<offset<<endl;
 
                                     // 16-bit output
 

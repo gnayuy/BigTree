@@ -32,8 +32,9 @@ int main (int argc, const char *argv[])
         cout<<"1. Construct BigTree of whole dataset into 3 scales: BigTree inputDir outputDir"<<endl;
         cout<<"2. Construct BigTree of whole dataset into n scales: BigTree inputDir outputDir n"<<endl;
         cout<<"3. Construct BigTree of whole dataset into 3 scales with 3D block size (x,y,z): BigTree inputDir outputDir x y z"<<endl;
-        cout<<"3. Construct BigTree of whole dataset into n scales with 3D block size (x,y,z): BigTree inputDir outputDir n x y z"<<endl;
-        cout<<"4. Construct BigTree for neuron reconstruction: BigTree inputDir outputDir neuron.swc"<<endl;
+        cout<<"4. Construct BigTree of whole dataset into n scales with 3D block size (x,y,z): BigTree inputDir outputDir n x y z"<<endl;
+        cout<<"5. Construct BigTree for neuron reconstruction: BigTree inputDir outputDir neuron.swc"<<endl;
+        cout<<"6. Construct BigTree's meta data: BigTree inputDir outputDir n 1"<<endl;
 
         //
         return 0;
@@ -43,6 +44,8 @@ int main (int argc, const char *argv[])
     int numImages=32;
 
     cout<<"max load "<<numImages<<" 2D images each time"<<endl;
+
+    bool genMetaOnly = false;
 
     //
     if(argc==3)
@@ -75,14 +78,19 @@ int main (int argc, const char *argv[])
 
             if(n>0 && n<10)
             {
-                BigTree bigtree(argv[1], argv[2], n, "", 16, 256, 256, 256, 0, 2); // bigtree conversion
+                BigTree bigtree(argv[1], argv[2], n, "", 16, 256, 256, 256, 0, 2, genMetaOnly); // bigtree conversion
                 return 0;
             }
         }
     }
     else if(argc==5)
     {
-        BigTree bigtree(argv[1], argv[2], atoi(argv[3]), argv[4]);
+        cout<<"Generating meta data? "<<argv[4]<<endl;
+
+        if(atoi(argv[4])!=0)
+            genMetaOnly = true;
+
+        BigTree bigtree(argv[1], argv[2], atoi(argv[3]), "", 16, 256, 256, 256, 0, 2, genMetaOnly);
         return 0;
     }
     else if(argc==6)

@@ -1015,6 +1015,17 @@ long QueryAndCopy::findOffset(OffsetType offsets, long idx)
 BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, int numImages, unsigned int bsx, unsigned int bsy, unsigned int bsz, int nBits, int outDatatype, bool generateMetaOnly)
 {
     // init
+    srcdir.assign(inputdir);
+    dstdir.assign(outputdir);
+
+    //
+    if(outputdir.empty())
+    {
+        check(inputdir);
+        exit(0);
+    }
+
+    //
     halve_pow2 = NULL;
     n_stacks_V = NULL;
     n_stacks_H = NULL;
@@ -1056,10 +1067,6 @@ BigTree::BigTree(string inputdir, string outputdir, int scales, string neuron, i
     {
         cout<<"Invalide resolutions setting \n";
     }
-
-    //
-    srcdir.assign(inputdir);
-    dstdir.assign(outputdir);
 
     //
     omp_set_num_threads(omp_get_max_threads());
@@ -2261,5 +2268,68 @@ int BigTree::resume()
         outfile.close();
     }
 
+    return 0;
+}
+
+// checking tiff files
+int BigTree::check(string inputdir)
+{
+    // checking the correct and completeness of tiff files
+    // 1. thousands of 2D TIFF files (input)
+    // 2. millions of 3D TIFF files (converted)
+
+    cout<<"check ..."<<endl;
+
+    //
+    DIR *indir = opendir(srcdir.c_str());
+    if(indir == NULL)
+    {
+        cout<< srcdir <<": No such file or directory"  << endl;
+        closedir(indir);
+        return -1;
+    }
+    else
+    {
+        //
+        set<string> filelist;
+
+        // get image list
+        struct dirent *dirinfo = readdir(indir);
+        while(dirinfo)
+        {
+            if(!strcmp(dirinfo->d_name,".") || !strcmp(dirinfo->d_name,".."))
+            {
+                dirinfo = readdir(indir);
+                continue;
+            }
+            filelist.insert(srcdir + "/" + dirinfo->d_name); // absolute path
+
+            dirinfo = readdir(indir);
+        }
+        closedir(indir);
+
+        //
+        if(filelist.size()<1)
+        {
+            cout<<"Empty directory!"<<endl;
+            return -1;
+        }
+
+        //
+        cout<<"... debug ..."<<filelist.size()<<endl;
+
+
+
+
+
+
+
+
+
+        // case 2:
+
+    }
+
+    //
     return 0;
 }

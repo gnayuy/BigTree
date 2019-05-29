@@ -88,7 +88,7 @@ public:
 class BigTree
 {
 public:
-    BigTree(string inputdir, string outputdir, int scales=3, string neuron="", int numImages=16, unsigned int bsx=256, unsigned int bsy=256, unsigned int bsz=256, int nBits=4, int outDatatype=1, bool generateMetaOnly=false);
+    BigTree(string inputdir, string outputdir="", int scales=3, string neuron="", int numImages=16, unsigned int bsx=256, unsigned int bsy=256, unsigned int bsz=256, int nBits=4, int outDatatype=1, bool generateMetaOnly=false);
     ~BigTree();
 
 public:
@@ -101,6 +101,9 @@ public:
 
     // updating starting z index
     int resume();
+
+    // checking tiff files
+    int check(string inputdir);
 
 public:
     string srcdir, dstdir;

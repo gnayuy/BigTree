@@ -48,7 +48,12 @@ int main (int argc, const char *argv[])
     bool genMetaOnly = false;
 
     //
-    if(argc==3)
+    if(argc==2)
+    {
+        BigTree bigtree(argv[1]);
+        return 0;
+    }
+    else if(argc==3)
     {
         BigTree bigtree(argv[1], argv[2]); // 3 layers
         return 0;
